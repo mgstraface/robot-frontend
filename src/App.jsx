@@ -6,6 +6,20 @@ import Face, { EMOTION_LABELS } from './components/Face.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
 import Login from './components/Login.jsx';
 import PersonalityPanel from './components/PersonalityPanel.jsx';
+import { useIdleLife } from './useIdleLife.js';
+
+const LIFE_KEY = 'robot_idle_life';
+// Emociones de estado que no se disipan solas (duran lo que dura la acción)
+const STICKY = ['neutral', 'pensando', 'escuchando'];
+const DECAY_MS = 7000;
+
+function loadLifePref() {
+  try {
+    return localStorage.getItem(LIFE_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
 
 const TABS = [
   { id: 'personality', label: 'Personalidad' },
@@ -21,6 +35,24 @@ export default function App() {
   const [status, setStatus] = useState(null);
   const [tab, setTab] = useState('personality');
   const [toast, setToast] = useState('');
+  const [life, setLife] = useState(loadLifePref);
+  const { action, poke } = useIdleLife({ emotion, enabled: life && Boolean(cfg) });
+
+  // Toda interacción cuenta como actividad: corta la acción en curso y lo despierta
+  const changeEmotion = useCallback(
+    (e) => {
+      poke();
+      setEmotion(e);
+    },
+    [poke]
+  );
+
+  // Con vida propia, las emociones vuelven solas a neutral después de un rato
+  useEffect(() => {
+    if (!life || STICKY.includes(emotion)) return undefined;
+    const id = setTimeout(() => setEmotion('neutral'), DECAY_MS);
+    return () => clearTimeout(id);
+  }, [emotion, life]);
 
   const logout = useCallback(() => {
     setToken('');
@@ -79,8 +111,22 @@ export default function App() {
   const devices = status?.devices || [];
   const robotId = devices[0]?.deviceId;
 
+  function toggleLife(on) {
+    setLife(on);
+    poke();
+    try {
+      localStorage.setItem(LIFE_KEY, on ? '1' : '0');
+    } catch {
+      /* sin storage */
+    }
+  }
+
+  function pet() {
+    changeEmotion(action === 'dormir' ? 'sorprendido' : 'amor');
+  }
+
   async function sendExpression(e) {
-    setEmotion(e);
+    changeEmotion(e);
     if (!robotId) return;
     try {
       await api.expression(e);
@@ -112,7 +158,7 @@ export default function App() {
       <main className="layout">
         <div className="col">
           <section className="card stage">
-            <Face emotion={emotion} size={340} />
+            <Face emotion={emotion} action={action} size={340} onPet={pet} />
             <div className="expressions" role="group" aria-label="Expresiones">
               {cfg.emotions.map((e) => (
                 <button
@@ -126,8 +172,12 @@ export default function App() {
                 </button>
               ))}
             </div>
+            <label className="toggle life-toggle">
+              <input type="checkbox" checked={life} onChange={(e) => toggleLife(e.target.checked)} />
+              Vida propia
+            </label>
           </section>
-          <ChatPanel onEmotion={setEmotion} robotId={robotId} serverVoice={cfg.voice} onError={onError} />
+          <ChatPanel onEmotion={changeEmotion} robotId={robotId} serverVoice={cfg.voice} onError={onError} />
         </div>
 
         <section className="card side">

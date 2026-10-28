@@ -371,8 +371,106 @@ label {
 @keyframes pop {
   from { transform: scale(0.94); opacity: 0.4; }
 }
+/* ---------- Vida propia ---------- */
+.pettable {
+  cursor: pointer;
+}
+.ball {
+  fill: #ffb547;
+}
+.mouth {
+  fill: var(--eye);
+}
+.note {
+  fill: var(--eye);
+  font: 700 22px 'Space Grotesk', sans-serif;
+  animation: note-float 1.6s infinite ease-out;
+}
+.note-2 {
+  font-size: 18px;
+  animation-delay: 0.8s;
+}
+
+.look-around {
+  animation: look-around 3.2s ease-in-out;
+}
+@keyframes look-around {
+  0%, 100% { transform: translateX(0); }
+  15%, 40% { transform: translateX(-16px); }
+  55%, 85% { transform: translateX(16px); }
+}
+
+/* Pelotita: va y viene rebotando; los ojos la siguen */
+.ball-x {
+  animation: ball-x 3.2s ease-in-out 2;
+}
+.ball-x .ball {
+  animation: ball-bounce 0.8s infinite;
+}
+.follow-ball {
+  animation: follow-ball 3.2s ease-in-out 2;
+}
+@keyframes ball-x {
+  0%, 100% { transform: translate(40px, 0); }
+  50% { transform: translate(200px, 0); }
+}
+@keyframes ball-bounce {
+  0%, 100% { transform: translateY(160px); animation-timing-function: ease-out; }
+  50% { transform: translateY(128px); animation-timing-function: ease-in; }
+}
+@keyframes follow-ball {
+  0%, 100% { transform: translate(-14px, 10px); }
+  50% { transform: translate(14px, 10px); }
+}
+
+.yawn-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: yawn-eyes 3.4s ease-in-out;
+}
+.yawn-mouth {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: yawn-mouth 3.4s ease-in-out forwards;
+}
+@keyframes yawn-eyes {
+  0%, 100% { transform: scaleY(1); }
+  25%, 70% { transform: scaleY(0.2); }
+}
+@keyframes yawn-mouth {
+  0%, 100% { transform: scale(0); }
+  25%, 70% { transform: scale(1.2, 1.4); }
+}
+
+.sway {
+  transform-origin: 120px 90px;
+  animation: sway 1.2s ease-in-out infinite alternate;
+}
+@keyframes sway {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg); }
+}
+.tilt {
+  transform-origin: 120px 90px;
+  animation: tilt 3.6s ease-in-out;
+}
+@keyframes tilt {
+  0%, 100% { transform: rotate(0); }
+  20%, 80% { transform: rotate(-10deg); }
+}
+@keyframes note-float {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-24px); opacity: 0; }
+}
+
+.life-toggle {
+  margin: 0;
+  color: var(--muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .blink, .pulse, .beat, .look-up, .dots circle, .zzz, .face-enter { animation: none; }
+  .blink, .pulse, .beat, .look-up, .dots circle, .zzz, .face-enter,
+  .look-around, .ball-x, .ball-x .ball, .follow-ball, .yawn-eyes, .sway, .tilt, .note { animation: none; }
 }
 
 .expressions {

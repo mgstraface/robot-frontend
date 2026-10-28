@@ -123,13 +123,73 @@ export const EMOTION_LABELS = {
   escuchando: 'Escuchando',
 };
 
-export default function Face({ emotion = 'neutral', size = 320 }) {
-  const render = FACES[emotion] || FACES.neutral;
+// Acciones de "vida propia": lo que hace solo cuando está en neutral y nadie le da bola.
+// Cada una dura IDLE_ACTIONS[x].ms y después vuelve a neutral.
+export const IDLE_ACTIONS = {
+  mirar: {
+    ms: 3200,
+    render: () => (
+      <g className="look-around">
+        <g className="blink">
+          <Eye cx={L} />
+          <Eye cx={R} />
+        </g>
+      </g>
+    ),
+  },
+  pelota: {
+    ms: 6400,
+    render: () => (
+      <g>
+        <g className="follow-ball">
+          <Eye cx={L} w={38} h={50} />
+          <Eye cx={R} w={38} h={50} />
+        </g>
+        <g className="ball-x">
+          <circle className="ball" cx="0" cy="0" r="8" />
+        </g>
+      </g>
+    ),
+  },
+  pensar: { ms: 4000, render: () => FACES.pensando() },
+  bostezo: {
+    ms: 3400,
+    render: () => (
+      <g>
+        <g className="yawn-eyes">
+          <Eye cx={L} />
+          <Eye cx={R} />
+        </g>
+        <ellipse className="mouth yawn-mouth" cx="120" cy="146" rx="12" ry="10" />
+      </g>
+    ),
+  },
+  tararear: {
+    ms: 4800,
+    render: () => (
+      <g>
+        <g className="sway">{FACES.feliz()}</g>
+        <text className="note" x="196" y="64">♪</text>
+        <text className="note note-2" x="210" y="88">♫</text>
+      </g>
+    ),
+  },
+  curiosear: {
+    ms: 3600,
+    render: () => <g className="tilt">{FACES.curioso()}</g>,
+  },
+  dormir: { ms: Infinity, render: () => FACES.dormido() },
+};
+
+export default function Face({ emotion = 'neutral', action = null, size = 320, onPet }) {
+  const idle = action && IDLE_ACTIONS[action];
+  const render = idle ? idle.render : FACES[emotion] || FACES.neutral;
+  const key = idle ? `idle-${action}` : emotion;
   return (
-    <div className="face-shell" style={{ width: size }}>
+    <div className={`face-shell ${onPet ? 'pettable' : ''}`} style={{ width: size }} onClick={onPet} title={onPet ? 'Haceme un mimo' : undefined}>
       <svg className="face" viewBox="0 0 240 180" role="img" aria-label={`Cara: ${EMOTION_LABELS[emotion] || emotion}`}>
         <rect className="screen" x="0" y="0" width="240" height="180" rx="36" />
-        <g key={emotion} className="face-enter">
+        <g key={key} className="face-enter">
           {render()}
         </g>
       </svg>

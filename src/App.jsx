@@ -337,7 +337,7 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return undefined;
-    const id = setTimeout(() => setToast(''), 5000);
+    const id = setTimeout(() => setToast(''), toast.length > 80 ? 10000 : 5000);
     return () => clearTimeout(id);
   }, [toast]);
 

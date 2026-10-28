@@ -4,6 +4,10 @@ import { api } from './api.js';
 
 let currentAudio = null;
 
+export function isIOS() {
+  return typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+}
+
 export const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
 const Recognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -105,7 +109,16 @@ export function listen() {
     };
     rec.onerror = (e) => {
       if (e.error === 'no-speech' || e.error === 'aborted') resolve('');
-      else if (e.error === 'not-allowed') reject(new Error('El navegador no tiene permiso para usar el micrófono'));
+      else if (e.error === 'not-allowed') reject(new Error('El navegador no tiene permiso para usar el micrófono: habilitalo en los ajustes del sitio.'));
+      else if (e.error === 'service-not-allowed') {
+        reject(
+          new Error(
+            isIOS()
+              ? 'En iPhone el dictado por voz solo funciona en Safari y con "Dictado" activado (Ajustes → General → Teclado). Mientras tanto, usá el micrófono del teclado para dictar.'
+              : 'Este navegador no deja usar el reconocimiento de voz. Probá con Chrome o Edge, o dictá con el micrófono del teclado.'
+          )
+        );
+      } else if (e.error === 'network') reject(new Error('El reconocimiento de voz necesita conexión a internet.'));
       else reject(new Error(`Micrófono: ${e.error}`));
     };
     rec.onend = () => resolve(text.trim());

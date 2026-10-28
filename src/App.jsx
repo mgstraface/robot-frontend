@@ -8,6 +8,11 @@ import HistoryPanel from './components/HistoryPanel.jsx';
 import Login from './components/Login.jsx';
 import PersonalityPanel from './components/PersonalityPanel.jsx';
 import RoutinesPanel from './components/RoutinesPanel.jsx';
+import PhotosPanel from './components/PhotosPanel.jsx';
+import GamesPanel from './components/GamesPanel.jsx';
+import PptGame from './components/games/PptGame.jsx';
+import CatchGame from './components/games/CatchGame.jsx';
+import { photoUrl } from './photos.js';
 import { speak, speakSpooky } from './speech.js';
 import { useIdleLife } from './useIdleLife.js';
 
@@ -16,6 +21,19 @@ const LIFE_KEY = 'robot_idle_life';
 const STICKY = ['neutral', 'pensando', 'escuchando'];
 const DECAY_MS = 7000;
 const FEED_MS = 4000;
+const TRIES = [
+  { id: 'saludo', label: 'Saludo de la mañana' },
+  { id: 'clima', label: 'Clima' },
+  { id: 'agua', label: 'Agua' },
+  { id: 'reunion', label: 'Aviso de reunión' },
+  { id: 'susto', label: 'Susto' },
+  { id: 'deploy-ok', label: 'Deploy OK' },
+  { id: 'deploy-falla', label: 'Deploy falló' },
+  { id: 'foco-fin', label: 'Fin de foco' },
+];
+const TRIVIA_PROMPT =
+  '¡Juguemos a una trivia de películas de terror! Haceme una pregunta por vez con tres opciones, esperá mi respuesta, decime si acerté y llevá la cuenta.';
+
 const KIND_LABELS = { saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
 
 function pcVoiceOn() {
@@ -55,6 +73,8 @@ function loadLifePref() {
 const TABS = [
   { id: 'appearance', label: 'Apariencia' },
   { id: 'routines', label: 'Rutinas' },
+  { id: 'games', label: 'Juegos' },
+  { id: 'photos', label: 'Fotos' },
   { id: 'personality', label: 'Personalidad' },
   { id: 'history', label: 'Memoria' },
   { id: 'events', label: 'Eventos' },
@@ -78,6 +98,13 @@ export default function App() {
   const [now, setNow] = useState(Date.now());
   const [forced, setForced] = useState(null); // acción que pidió el servidor o el panel (clima, susto…)
   const [announcement, setAnnouncement] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [photo, setPhoto] = useState(null); // foto que se está mostrando (portarretrato)
+  const [game, setGame] = useState(null);
+  const [showTry, setShowTry] = useState(false);
+  const [trying, setTrying] = useState('');
+  const [chatPrompt, setChatPrompt] = useState(null);
+  const photoIndex = useRef(0);
   const forcedQueue = useRef({ timer: null });
   const feedRef = useRef({ lastId: null, poll: null });
   const { action: idleAction, poke } = useIdleLife({
@@ -91,9 +118,10 @@ export default function App() {
   // Toda interacción cuenta como actividad: corta la acción en curso y lo despierta
   const changeEmotion = useCallback(
     (e) => {
-      // una interacción corta cualquier animación pedida (clima, susto…)
+      // una interacción corta cualquier animación pedida (clima, susto…) y la foto del portarretrato
       clearTimeout(forcedQueue.current.timer);
       setForced(null);
+      setPhoto(null);
       poke();
       setEmotion(e);
     },
@@ -194,6 +222,54 @@ export default function App() {
       .catch(() => {});
   }, [cfg]);
 
+  // Fotos del portarretrato
+  const loadPhotos = useCallback(() => {
+    api
+      .photos()
+      .then(setPhotos)
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (cfg) loadPhotos();
+  }, [cfg, loadPhotos]);
+
+  const showPhoto = useCallback(
+    async (ms) => {
+      if (!photos.length) return;
+      const p = photos[photoIndex.current % photos.length];
+      photoIndex.current += 1;
+      try {
+        setPhoto(await photoUrl(p.id));
+      } catch {
+        return;
+      }
+      await new Promise((r) => setTimeout(r, ms));
+      setPhoto(null);
+    },
+    [photos]
+  );
+
+  // Portarretrato: intercala la cara con las fotos mientras está tranquilo
+  useEffect(() => {
+    const quiet = emotion === 'neutral' && !forced && !focus && !night && !game;
+    if (!settings?.frameEnabled || !photos.length || !quiet) return undefined;
+    let alive = true;
+    let timer = null;
+    const loop = () => {
+      timer = setTimeout(async () => {
+        if (!alive) return;
+        await showPhoto(settings.framePhotoSec * 1000);
+        if (alive) loop();
+      }, settings.frameFaceSec * 1000);
+    };
+    loop();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+      setPhoto(null);
+    };
+  }, [settings, photos, emotion, forced, focus, night, game, showPhoto]);
+
   // ¿Es horario de dormir? Se revisa cada minuto
   useEffect(() => {
     if (!settings) return undefined;
@@ -281,6 +357,37 @@ export default function App() {
     }
   }
 
+  async function tryRoutine(kind) {
+    setTrying(kind);
+    try {
+      if (kind === 'clima') {
+        const w = await api.weather();
+        playActions(['clima'], w.category);
+      } else {
+        changeEmotion('pensando');
+        await api.tryRoutine(kind);
+        await feedRef.current.poll?.();
+      }
+    } catch (err) {
+      onError(err);
+    } finally {
+      setTrying('');
+    }
+  }
+
+  function playGame(id) {
+    if (id === 'trivia') {
+      setChatPrompt({ id: Date.now(), text: TRIVIA_PROMPT });
+      return;
+    }
+    setGame(id);
+  }
+
+  function exitGame() {
+    setGame(null);
+    changeEmotion('neutral');
+  }
+
   async function toggleFocus() {
     try {
       if (focus) {
@@ -334,7 +441,11 @@ export default function App() {
       <main className="layout">
         <div className="col">
           <section className="card stage">
-            <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} />
+            {game === 'ppt' && <PptGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
+            {game === 'ojo' && <CatchGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
+            {!game && (
+            <>
+            <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} />
             <div className="expressions" role="group" aria-label="Expresiones">
               {cfg.emotions.map((e) => (
                 <button
@@ -373,9 +484,23 @@ export default function App() {
                 <input type="checkbox" checked={life} onChange={(e) => toggleLife(e.target.checked)} />
                 Vida propia
               </label>
+              <button type="button" className="ghost small" onClick={() => setShowTry((v) => !v)} aria-expanded={showTry}>
+                {showTry ? 'Cerrar pruebas' : 'Probar'}
+              </button>
             </div>
+            {showTry && (
+              <div className="try-row" role="group" aria-label="Probar rutinas">
+                {TRIES.map((t) => (
+                  <button key={t.id} type="button" className="chip" onClick={() => tryRoutine(t.id)} disabled={Boolean(trying)}>
+                    {trying === t.id ? 'Probando…' : t.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            </>
+            )}
           </section>
-          <ChatPanel onEmotion={changeEmotion} robotId={robotId} serverVoice={cfg.voice} onError={onError} />
+          <ChatPanel onEmotion={changeEmotion} robotId={robotId} serverVoice={cfg.voice} onError={onError} prompt={chatPrompt} />
         </div>
 
         <section className="card side">
@@ -411,6 +536,17 @@ export default function App() {
               onPlay={playActions}
               onError={onError}
               onNeedsFeed={() => feedRef.current.poll?.()}
+            />
+          )}
+          {tab === 'games' && <GamesPanel onPlay={playGame} />}
+          {tab === 'photos' && (
+            <PhotosPanel
+              photos={photos}
+              settings={settings}
+              onPhotos={loadPhotos}
+              onSettings={setSettings}
+              onPreview={() => showPhoto((settings?.framePhotoSec || 10) * 1000)}
+              onError={onError}
             />
           )}
           {tab === 'personality' && <PersonalityPanel onSaved={(p) => setName(p.name)} onError={onError} />}

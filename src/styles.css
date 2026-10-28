@@ -1048,3 +1048,177 @@ label {
 @media (prefers-reduced-motion: reduce) {
   .spiral, .woozy, .sun, .drop, .flake, .bolt, .fog rect { animation: none; }
 }
+
+/* ---------- Estornudo e hipo (tipo Eilik) ---------- */
+.sneeze {
+  transform-origin: 120px 90px;
+  animation: sneeze 2.6s ease-in-out both;
+}
+@keyframes sneeze {
+  0%, 45% { transform: scale(1) translateY(0); }
+  55% { transform: scale(1.12) translateY(-6px); }
+  62% { transform: scale(0.94) translateY(5px); }
+  75%, 100% { transform: scale(1) translateY(0); }
+}
+.sneeze-text,
+.hic-text {
+  fill: var(--eye);
+  font: 700 18px 'Space Grotesk', sans-serif;
+}
+.sneeze-text {
+  opacity: 0;
+  animation: sneeze-text 2.6s ease-out both;
+}
+@keyframes sneeze-text {
+  0%, 52% { opacity: 0; transform: translateY(6px); }
+  60%, 85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
+}
+.hiccup {
+  animation: hiccup 1s ease-out 3;
+}
+@keyframes hiccup {
+  0%, 60%, 100% { transform: translateY(0); }
+  70% { transform: translateY(-10px); }
+}
+.hic-text {
+  font-size: 14px;
+  animation: hic-text 1s ease-out 3;
+}
+@keyframes hic-text {
+  0%, 60% { opacity: 0; transform: translateY(4px); }
+  70%, 90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sneeze, .sneeze-text, .hiccup, .hic-text { animation: none; }
+}
+
+/* ---------- Probar ---------- */
+.try-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* ---------- Fotos ---------- */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.photo-item {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+  aspect-ratio: 320 / 172;
+}
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-item button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+}
+.upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  margin: 0;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 500;
+  font-size: 1rem;
+}
+.upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* ---------- Juegos ---------- */
+.games {
+  display: grid;
+  gap: 0.6rem;
+}
+.game-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.game-card p {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.game-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.game-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.game-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+}
+.game-text {
+  fill: var(--eye);
+  font: 700 16px 'Space Grotesk', sans-serif;
+}
+.game-icon {
+  fill: none;
+  stroke: var(--eye);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.shake {
+  animation: shake 0.3s ease-in-out infinite alternate;
+}
+@keyframes shake {
+  from { transform: translateY(-5px); }
+  to { transform: translateY(5px); }
+}
+.target {
+  cursor: pointer;
+}
+.target-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: target-pop 0.18s ease-out;
+}
+@keyframes target-pop {
+  from { transform: scale(0.3); }
+  to { transform: scale(1); }
+}
+.time-bar {
+  fill: var(--eye);
+  opacity: 0.6;
+}

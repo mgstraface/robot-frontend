@@ -13,7 +13,7 @@ function loadVoicePref() {
   }
 }
 
-export default function ChatPanel({ onEmotion, robotId, serverVoice, onError }) {
+export default function ChatPanel({ onEmotion, robotId, serverVoice, onError, prompt }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -35,6 +35,15 @@ export default function ChatPanel({ onEmotion, robotId, serverVoice, onError }) 
   }, [messages]);
 
   useEffect(() => stopSpeaking, []);
+
+  // Mensaje que manda otra parte del panel (ej. "Trivia de terror" en Juegos)
+  const lastPrompt = useRef(null);
+  useEffect(() => {
+    if (!prompt || lastPrompt.current === prompt.id) return;
+    lastPrompt.current = prompt.id;
+    listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    sendText(prompt.text);
+  }, [prompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function togglePcVoice(on) {
     setPcVoice(on);

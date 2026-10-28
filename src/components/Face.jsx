@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 // Cara del robot dibujada en SVG. Sirve de simulador en el panel y de referencia
 // para dibujar las mismas expresiones en la pantalla del ESP32 (240×180 aprox.).
@@ -289,6 +289,37 @@ export const IDLE_ACTIONS = {
     ms: 3600,
     render: () => <g className="tilt">{FACES.curioso()}</g>,
   },
+  // Detalles tipo Eilik (modo tierno)
+  estornudo: {
+    ms: 2600,
+    modes: ['tierno'],
+    render: () => (
+      <g className="sneeze">
+        <g className="sneeze-squint">
+          <path className="eye-line" d={`M${L - 18} ${Y - 6} L${L + 6} ${Y} L${L - 18} ${Y + 6}`} />
+          <path className="eye-line" d={`M${R + 18} ${Y - 6} L${R - 6} ${Y} L${R + 18} ${Y + 6}`} />
+        </g>
+        <text className="sneeze-text" x="120" y="150" textAnchor="middle">
+          ¡achís!
+        </text>
+      </g>
+    ),
+  },
+  hipo: {
+    ms: 3000,
+    modes: ['tierno'],
+    render: () => (
+      <g>
+        <g className="hiccup blink">
+          <Eye cx={L} />
+          <Eye cx={R} />
+        </g>
+        <text className="hic-text" x="196" y="52">
+          hip
+        </text>
+      </g>
+    ),
+  },
   // Solo en estilo terror
   acechar: {
     ms: 4400,
@@ -416,7 +447,12 @@ export function actionMs(action) {
   return IDLE_ACTIONS[String(action).split(':')[0]]?.ms ?? 3000;
 }
 
-function renderLayer({ emotion, action, faceStyle }) {
+function renderLayer({ emotion, action, faceStyle, photo, clipId }) {
+  if (photo) {
+    return (
+      <image href={photo} x="0" y="0" width="240" height="180" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
+    );
+  }
   const [name, param] = action ? String(action).split(':') : [];
   const idle = name && IDLE_ACTIONS[name];
   if (idle) return idle.render(faceStyle, param);
@@ -427,9 +463,10 @@ function renderLayer({ emotion, action, faceStyle }) {
  * Cara con fundido cruzado: cuando cambia la emoción, la acción o el estilo, la cara anterior
  * se desvanece mientras aparece la nueva (en vez de cambiar de golpe).
  */
-export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno' }) {
-  const key = `${faceStyle}-${action ? `idle-${action}` : emotion}`;
-  const [layers, setLayers] = useState(() => [{ key, emotion, action, faceStyle, leaving: false }]);
+export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno', photo = null, children }) {
+  const clipId = `face-clip-${useId().replace(/:/g, '')}`;
+  const key = photo ? `photo-${photo}` : `${faceStyle}-${action ? `idle-${action}` : emotion}`;
+  const [layers, setLayers] = useState(() => [{ key, emotion, action, faceStyle, photo, leaving: false }]);
   const timers = useRef([]);
 
   useEffect(() => {
@@ -437,11 +474,11 @@ export default function Face({ emotion = 'neutral', action = null, size = 320, o
       const current = prev[prev.length - 1];
       if (current && current.key === key) return prev;
       // la capa actual pasa a "saliendo"; las que ya salían se descartan
-      return [...(current ? [{ ...current, leaving: true }] : []), { key, emotion, action, faceStyle, leaving: false }];
+      return [...(current ? [{ ...current, leaving: true }] : []), { key, emotion, action, faceStyle, photo, leaving: false }];
     });
     const t = setTimeout(() => setLayers((prev) => prev.filter((l) => !l.leaving)), FADE_MS);
     timers.current.push(t);
-  }, [key, emotion, action, faceStyle]);
+  }, [key, emotion, action, faceStyle, photo]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -454,12 +491,19 @@ export default function Face({ emotion = 'neutral', action = null, size = 320, o
         role="img"
         aria-label={`Cara: ${EMOTION_LABELS[emotion] || emotion}`}
       >
+        <defs>
+          <clipPath id={clipId}>
+            <rect x="0" y="0" width="240" height="180" rx="36" />
+          </clipPath>
+        </defs>
         <rect className="screen" x="0" y="0" width="240" height="180" rx="36" />
-        {layers.map((l) => (
-          <g key={l.key} className={l.leaving ? 'face-leave' : 'face-enter'}>
-            {renderLayer(l)}
-          </g>
-        ))}
+        {children
+          ? children /* un juego dibuja su propia pantalla */
+          : layers.map((l) => (
+              <g key={l.key} className={l.leaving ? 'face-leave' : 'face-enter'}>
+                {renderLayer({ ...l, clipId })}
+              </g>
+            ))}
       </svg>
     </div>
   );

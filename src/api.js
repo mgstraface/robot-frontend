@@ -57,6 +57,26 @@ export const api = {
   startFocus: (minutes) => request('/focus', { method: 'POST', body: { minutes } }),
   stopFocus: () => request('/focus', { method: 'DELETE' }),
   action: (action, weather) => request('/action', { method: 'POST', body: { action, weather } }),
+  photos: () => request('/photos'),
+  photoBlob: async (id) => {
+    const res = await fetch(`${BASE}/api/photos/${id}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+    if (res.status === 401) throw new UnauthorizedError('Token inválido');
+    if (!res.ok) throw new Error(`No se pudo bajar la foto (${res.status})`);
+    return res.blob();
+  },
+  uploadPhoto: async (blob) => {
+    const res = await fetch(`${BASE}/api/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/jpeg', Authorization: `Bearer ${getToken()}` },
+      body: blob,
+    });
+    if (res.status === 401) throw new UnauthorizedError('Token inválido');
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+    return data;
+  },
+  deletePhoto: (id) => request(`/photos/${id}`, { method: 'DELETE' }),
+  tryRoutine: (kind) => request(`/try/${kind}`, { method: 'POST' }),
   chat: (text, speakOn) => request('/chat', { method: 'POST', body: { text, deviceId: 'panel', speakOn } }),
   // Devuelve un Blob de audio (WAV) con la voz del servidor
   tts: async (text) => {

@@ -454,6 +454,29 @@ label {
   gap: 0.5rem;
   margin-top: 0.8rem;
 }
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem 1rem;
+}
+.mic {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.mic.on {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  animation: pulse 1.2s infinite ease-in-out;
+}
 
 /* ---------- Panel lateral ---------- */
 .tabs {

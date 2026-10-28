@@ -127,7 +127,7 @@ export default function App() {
               ))}
             </div>
           </section>
-          <ChatPanel onEmotion={setEmotion} robotId={robotId} onError={onError} />
+          <ChatPanel onEmotion={setEmotion} robotId={robotId} serverVoice={cfg.voice} onError={onError} />
         </div>
 
         <section className="card side">

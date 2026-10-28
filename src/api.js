@@ -47,4 +47,15 @@ export const api = {
   expression: (emotion, deviceId) => request('/robot/expression', { method: 'POST', body: { emotion, deviceId } }),
   say: (text, emotion, deviceId) => request('/robot/say', { method: 'POST', body: { text, emotion, deviceId } }),
   chat: (text, speakOn) => request('/chat', { method: 'POST', body: { text, deviceId: 'panel', speakOn } }),
+  // Devuelve un Blob de audio (WAV) con la voz del servidor
+  tts: async (text) => {
+    const res = await fetch(`${BASE}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify({ text }),
+    });
+    if (res.status === 401) throw new UnauthorizedError('Token inválido');
+    if (!res.ok) throw new Error(`Voz del servidor: error ${res.status}`);
+    return res.blob();
+  },
 };

@@ -154,6 +154,7 @@ export default function App() {
           <h1>{name}</h1>
         </div>
         <div className="status-pills">
+          {cfg.env === 'dev' && <span className="pill dev">Entorno de pruebas</span>}
           <span className={`pill ${robotId ? 'on' : 'off'}`}>
             <i />
             {robotId ? `${devices.length} robot${devices.length > 1 ? 's' : ''} conectado${devices.length > 1 ? 's' : ''}` : 'Robot desconectado'}

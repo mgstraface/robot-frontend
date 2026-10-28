@@ -243,6 +243,12 @@ label {
 .pill.off {
   color: var(--danger);
 }
+.pill.dev {
+  background: #f2c14e;
+  border-color: #f2c14e;
+  color: #1b1d21;
+  font-weight: 700;
+}
 .pill.neutral {
   font-family: 'JetBrains Mono', monospace;
 }

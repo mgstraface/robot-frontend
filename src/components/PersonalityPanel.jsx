@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { PRESETS } from '../presets.js';
 
 export default function PersonalityPanel({ onSaved, onError }) {
   const [form, setForm] = useState(null);
@@ -40,8 +41,22 @@ export default function PersonalityPanel({ onSaved, onError }) {
     }
   }
 
+  function loadPreset(p) {
+    setStatus('');
+    setForm({ name: p.name || form.name, systemPrompt: p.systemPrompt });
+  }
+
   return (
     <form className="personality" onSubmit={save}>
+      <label>Cargar un carácter</label>
+      <div className="presets" role="group" aria-label="Caracteres">
+        {PRESETS.map((p) => (
+          <button key={p.id} type="button" className="chip" onClick={() => loadPreset(p)}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
       <label htmlFor="pname">Nombre</label>
       <input id="pname" value={form.name} maxLength={40} onChange={(e) => setForm({ ...form, name: e.target.value })} />
 
@@ -53,7 +68,7 @@ export default function PersonalityPanel({ onSaved, onError }) {
         onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })}
       />
       <p className="hint">
-        Cómo habla, qué sabe de vos, qué le gusta. El formato de emociones lo agrega el servidor solo.
+        Cómo habla, qué sabe de vos, qué le gusta. Cargar un carácter solo completa el formulario: revisalo y tocá Guardar. El formato de emociones lo agrega el servidor solo.
       </p>
 
       <div className="row">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { IDLE_ACTIONS } from './components/Face.jsx';
+import { IDLE_ACTIONS, idleActionsFor } from './components/Face.jsx';
 
 // Cuánto espera en neutral antes de hacer algo, y cada cuánto repite
 const FIRST_DELAY = [5000, 9000];
@@ -7,16 +7,15 @@ const BETWEEN = [6000, 14000];
 // Si nadie interactúa en este tiempo, se duerme
 const SLEEP_AFTER = 3 * 60 * 1000;
 
-const PLAYFUL = Object.keys(IDLE_ACTIONS).filter((a) => a !== 'dormir');
 
 const rand = ([min, max]) => min + Math.random() * (max - min);
 
 /**
  * "Vida propia": mientras la emoción es neutral, programa acciones al azar
- * (mirar, pelota, pensar, bostezo, tararear, curiosear) y lo duerme si pasa mucho tiempo sin actividad.
+ * (mirar, pelota, pensar, bostezo, tararear o curiosear; en estilo terror, acechar y glitch) y lo duerme si pasa mucho tiempo sin actividad.
  * poke() registra actividad: corta la acción en curso y lo despierta.
  */
-export function useIdleLife({ emotion, enabled }) {
+export function useIdleLife({ emotion, enabled, faceStyle = 'tierno' }) {
   const [action, setAction] = useState(null);
   const [pokes, setPokes] = useState(0);
   const lastActivity = useRef(Date.now());
@@ -38,7 +37,7 @@ export function useIdleLife({ emotion, enabled }) {
         setAction('dormir'); // queda dormido hasta el próximo poke()
         return;
       }
-      const options = PLAYFUL.filter((a) => a !== lastAction.current);
+      const options = idleActionsFor(faceStyle).filter((a) => a !== lastAction.current);
       const chosen = options[Math.floor(Math.random() * options.length)];
       lastAction.current = chosen;
       setAction(chosen);
@@ -50,7 +49,7 @@ export function useIdleLife({ emotion, enabled }) {
 
     timer.current = setTimeout(next, rand(FIRST_DELAY));
     return () => clearTimeout(timer.current);
-  }, [emotion, enabled, pokes]);
+  }, [emotion, enabled, pokes, faceStyle]);
 
   return { action, poke };
 }

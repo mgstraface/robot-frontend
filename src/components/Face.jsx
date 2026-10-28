@@ -23,20 +23,42 @@ function Heart({ cx }) {
 // Párpado: un polígono del color de la pantalla que tapa parte del ojo.
 function Lid({ cx, inner, outer, side }) {
   // inner/outer: cuánto baja el párpado (px) del lado de la nariz y del lado de afuera
-  const left = cx - 26;
-  const right = cx + 26;
+  // Ancho y hasta el borde de arriba de la pantalla, así tapa también el brillo del ojo (estilo terror)
+  const left = cx - 40;
+  const right = cx + 40;
   const top = Y - 34;
   const [yl, yr] = side === 'L' ? [outer, inner] : [inner, outer];
-  return <polygon className="lid" points={`${left},${top - 4} ${right},${top - 4} ${right},${top + yr} ${left},${top + yl}`} />;
+  // la pendiente se extiende a los 80 px de ancho manteniendo la inclinación sobre el ojo
+  const slope = (yr - yl) / 52;
+  const yLeft = top + yl - slope * 14;
+  const yRight = top + yr + slope * 14;
+  return <polygon className="lid" points={`${left},0 ${right},0 ${right},${yRight} ${left},${yLeft}`} />;
+}
+
+// Ojos en reposo del estilo terror: párpados caídos hacia la nariz y parpadeo de a un ojo.
+function TerrorEyes({ className = 'blink-odd' }) {
+  return (
+    <g>
+      <g className={className}>
+        <Eye cx={L} />
+        <Eye cx={R} />
+      </g>
+      <Lid cx={L} side="L" inner={20} outer={6} />
+      <Lid cx={R} side="R" inner={20} outer={6} />
+    </g>
+  );
 }
 
 const FACES = {
-  neutral: () => (
-    <g className="blink">
-      <Eye cx={L} />
-      <Eye cx={R} />
-    </g>
-  ),
+  neutral: (style) =>
+    style === 'terror' ? (
+      <TerrorEyes />
+    ) : (
+      <g className="blink">
+        <Eye cx={L} />
+        <Eye cx={R} />
+      </g>
+    ),
   escuchando: () => (
     <g className="blink pulse">
       <Eye cx={L} w={44} h={60} />
@@ -128,14 +150,7 @@ export const EMOTION_LABELS = {
 export const IDLE_ACTIONS = {
   mirar: {
     ms: 3200,
-    render: () => (
-      <g className="look-around">
-        <g className="blink">
-          <Eye cx={L} />
-          <Eye cx={R} />
-        </g>
-      </g>
-    ),
+    render: (style) => <g className="look-around">{FACES.neutral(style)}</g>,
   },
   pelota: {
     ms: 6400,
@@ -166,6 +181,7 @@ export const IDLE_ACTIONS = {
   },
   tararear: {
     ms: 4800,
+    modes: ['tierno'],
     render: () => (
       <g>
         <g className="sway">{FACES.feliz()}</g>
@@ -178,19 +194,53 @@ export const IDLE_ACTIONS = {
     ms: 3600,
     render: () => <g className="tilt">{FACES.curioso()}</g>,
   },
+  // Solo en estilo terror
+  acechar: {
+    ms: 4400,
+    modes: ['terror'],
+    render: () => (
+      <g className="stalk">
+        <circle className="eye" cx={L} cy={Y} r="8" />
+        <circle className="eye" cx={R} cy={Y} r="8" />
+      </g>
+    ),
+  },
+  glitch: {
+    ms: 1800,
+    modes: ['terror'],
+    render: () => (
+      <g className="glitch">
+        <g className="glitch-ghost">
+          <TerrorEyes className="" />
+        </g>
+        <TerrorEyes className="" />
+      </g>
+    ),
+  },
   dormir: { ms: Infinity, render: () => FACES.dormido() },
 };
 
-export default function Face({ emotion = 'neutral', action = null, size = 320, onPet }) {
+/** Acciones de vida propia disponibles para un estilo de cara. */
+export function idleActionsFor(style) {
+  return Object.keys(IDLE_ACTIONS).filter((a) => a !== 'dormir' && (!IDLE_ACTIONS[a].modes || IDLE_ACTIONS[a].modes.includes(style)));
+}
+
+export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno' }) {
   const idle = action && IDLE_ACTIONS[action];
   const render = idle ? idle.render : FACES[emotion] || FACES.neutral;
-  const key = idle ? `idle-${action}` : emotion;
+  const key = `${faceStyle}-${idle ? `idle-${action}` : emotion}`;
   return (
     <div className={`face-shell ${onPet ? 'pettable' : ''}`} style={{ width: size }} onClick={onPet} title={onPet ? 'Haceme un mimo' : undefined}>
-      <svg className="face" viewBox="0 0 240 180" role="img" aria-label={`Cara: ${EMOTION_LABELS[emotion] || emotion}`}>
+      <svg
+        className={`face ${faceStyle === 'terror' ? 'terror' : ''}`}
+        style={eyeColor ? { '--eye': eyeColor } : undefined}
+        viewBox="0 0 240 180"
+        role="img"
+        aria-label={`Cara: ${EMOTION_LABELS[emotion] || emotion}`}
+      >
         <rect className="screen" x="0" y="0" width="240" height="180" rx="36" />
         <g key={key} className="face-enter">
-          {render()}
+          {render(faceStyle)}
         </g>
       </svg>
     </div>

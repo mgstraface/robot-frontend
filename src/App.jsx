@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, getToken, setToken, UnauthorizedError } from './api.js';
+import AppearancePanel from './components/AppearancePanel.jsx';
 import ChatPanel from './components/ChatPanel.jsx';
 import EventsPanel from './components/EventsPanel.jsx';
 import Face, { EMOTION_LABELS } from './components/Face.jsx';
@@ -22,6 +23,7 @@ function loadLifePref() {
 }
 
 const TABS = [
+  { id: 'appearance', label: 'Apariencia' },
   { id: 'personality', label: 'Personalidad' },
   { id: 'history', label: 'Memoria' },
   { id: 'events', label: 'Eventos' },
@@ -33,10 +35,13 @@ export default function App() {
   const [name, setName] = useState('Robi');
   const [emotion, setEmotion] = useState('neutral');
   const [status, setStatus] = useState(null);
-  const [tab, setTab] = useState('personality');
+  const [tab, setTab] = useState('appearance');
   const [toast, setToast] = useState('');
   const [life, setLife] = useState(loadLifePref);
-  const { action, poke } = useIdleLife({ emotion, enabled: life && Boolean(cfg) });
+  const [appearance, setAppearance] = useState({ eyeColor: '#5ef2ff', faceStyle: 'tierno' });
+  const [draftAppearance, setDraftAppearance] = useState(null);
+  const look = draftAppearance || appearance;
+  const { action, poke } = useIdleLife({ emotion, enabled: life && Boolean(cfg), faceStyle: look.faceStyle });
 
   // Toda interacción cuenta como actividad: corta la acción en curso y lo despierta
   const changeEmotion = useCallback(
@@ -79,7 +84,13 @@ export default function App() {
 
   useEffect(() => {
     if (!cfg) return;
-    api.getPersonality().then((p) => setName(p.name)).catch(onError);
+    api
+      .getPersonality()
+      .then((p) => {
+        setName(p.name);
+        if (p.eyeColor) setAppearance({ eyeColor: p.eyeColor, faceStyle: p.faceStyle || 'tierno' });
+      })
+      .catch(onError);
   }, [cfg, onError]);
 
   // Estado de los robots conectados, cada 3 segundos
@@ -158,7 +169,7 @@ export default function App() {
       <main className="layout">
         <div className="col">
           <section className="card stage">
-            <Face emotion={emotion} action={action} size={340} onPet={pet} />
+            <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} />
             <div className="expressions" role="group" aria-label="Expresiones">
               {cfg.emotions.map((e) => (
                 <button
@@ -195,6 +206,18 @@ export default function App() {
               </button>
             ))}
           </nav>
+          {tab === 'appearance' && (
+            <AppearancePanel
+              saved={appearance}
+              draft={draftAppearance}
+              onPreview={setDraftAppearance}
+              onSaved={(a) => {
+                setAppearance(a);
+                setDraftAppearance(null);
+              }}
+              onError={onError}
+            />
+          )}
           {tab === 'personality' && <PersonalityPanel onSaved={(p) => setName(p.name)} onError={onError} />}
           {tab === 'history' && <HistoryPanel onError={onError} />}
           {tab === 'events' && <EventsPanel status={status} />}

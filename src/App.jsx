@@ -3,10 +3,11 @@ import { api, getToken, setToken, UnauthorizedError } from './api.js';
 import AppearancePanel from './components/AppearancePanel.jsx';
 import ChatPanel from './components/ChatPanel.jsx';
 import EventsPanel from './components/EventsPanel.jsx';
-import Face, { EMOTION_LABELS } from './components/Face.jsx';
+import Face, { EMOTION_LABELS, IDLE_ACTIONS } from './components/Face.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
 import Login from './components/Login.jsx';
 import PersonalityPanel from './components/PersonalityPanel.jsx';
+import { speakSpooky } from './speech.js';
 import { useIdleLife } from './useIdleLife.js';
 
 const LIFE_KEY = 'robot_idle_life';
@@ -51,6 +52,19 @@ export default function App() {
     },
     [poke]
   );
+
+  // Algunas acciones de vida propia tienen sonido (la risa macabra). Solo suenan con "Voz en la PC" activada.
+  useEffect(() => {
+    const sound = action && IDLE_ACTIONS[action]?.sound;
+    if (!sound) return;
+    let pcVoice = true;
+    try {
+      pcVoice = localStorage.getItem('robot_pc_voice') !== '0';
+    } catch {
+      /* sin storage */
+    }
+    if (pcVoice) speakSpooky(sound);
+  }, [action]);
 
   // Con vida propia, las emociones vuelven solas a neutral después de un rato
   useEffect(() => {

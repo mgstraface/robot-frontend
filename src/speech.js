@@ -63,6 +63,19 @@ async function speakServer(text) {
   if (currentAudio === audio) currentAudio = null;
 }
 
+/** Voz grave y lenta para las risas y sonidos de la vida propia en modo terror. */
+export function speakSpooky(text) {
+  if (!ttsSupported) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const voice = pickVoice();
+  if (voice) u.voice = voice;
+  u.lang = voice?.lang || 'es-AR';
+  u.pitch = 0.1;
+  u.rate = 0.75;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
 /** Dice el texto en voz alta. Devuelve una promesa que termina cuando deja de hablar. */
 export async function speak(text, { serverVoice = false } = {}) {
   stopSpeaking();

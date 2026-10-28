@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 // Cara del robot dibujada en SVG. Sirve de simulador en el panel y de referencia
 // para dibujar las mismas expresiones en la pantalla del ESP32 (240×180 aprox.).
 
@@ -45,6 +47,26 @@ function TerrorEyes({ className = 'blink-odd' }) {
       </g>
       <Lid cx={L} side="L" inner={20} outer={6} />
       <Lid cx={R} side="R" inner={20} outer={6} />
+    </g>
+  );
+}
+
+// Boca con dientes y dos colmillos (estilo terror)
+function Fangs() {
+  const teeth = [];
+  for (let x = 82; x <= 152; x += 10) {
+    if (x === 92 || x === 142) continue; // ahí van los colmillos
+    teeth.push(<path key={x} className="tooth" d={`M${x} 134 L${x + 5} 141 L${x + 10} 134 Z`} />);
+  }
+  return (
+    <g>
+      <path className="maw" d="M72 132 L168 132 Q160 166 120 168 Q80 166 72 132 Z" />
+      {teeth}
+      <path className="tooth" d="M90 133 L97 152 L104 133 Z" />
+      <path className="tooth" d="M136 133 L143 152 L150 133 Z" />
+      <path className="tooth" d="M96 166 L101 158 L106 166 Z" />
+      <path className="tooth" d="M114 168 L119 159 L124 168 Z" />
+      <path className="tooth" d="M132 166 L137 158 L142 166 Z" />
     </g>
   );
 }
@@ -154,6 +176,7 @@ export const IDLE_ACTIONS = {
   },
   pelota: {
     ms: 6400,
+    modes: ['tierno'],
     render: () => (
       <g>
         <g className="follow-ball">
@@ -217,6 +240,72 @@ export const IDLE_ACTIONS = {
       </g>
     ),
   },
+  colmillos: {
+    ms: 4200,
+    modes: ['terror'],
+    render: () => (
+      <g>
+        <TerrorEyes />
+        <g className="mouth-open">
+          <Fangs />
+        </g>
+      </g>
+    ),
+  },
+  risa: {
+    ms: 3600,
+    modes: ['terror'],
+    // lo que dice en voz alta (si "Voz en la PC" está activada)
+    sound: 'je... je, je, je... ja, ja, ja',
+    render: () => (
+      <g className="laugh">
+        <g>
+          <g className="blink-odd">
+            <Eye cx={L} />
+            <Eye cx={R} />
+          </g>
+          <Lid cx={L} side="L" inner={30} outer={18} />
+          <Lid cx={R} side="R" inner={30} outer={18} />
+        </g>
+        <g className="mouth-open">
+          <Fangs />
+        </g>
+      </g>
+    ),
+  },
+  tercerOjo: {
+    ms: 3800,
+    modes: ['terror'],
+    render: () => (
+      <g>
+        <TerrorEyes />
+        <g className="third-eye">
+          <ellipse className="eye" cx="120" cy="30" rx="16" ry="11" />
+          <ellipse className="pupil" cx="120" cy="30" rx="3" ry="9" />
+        </g>
+      </g>
+    ),
+  },
+  lagrima: {
+    ms: 4000,
+    modes: ['terror'],
+    render: () => (
+      <g>
+        <TerrorEyes />
+        <path className="blood-drop" d="M74 118 Q74 112 78 106 Q82 112 82 118 A4 4 0 0 1 74 118 Z" />
+        <path className="blood-drop drop-2" d="M74 118 Q74 112 78 106 Q82 112 82 118 A4 4 0 0 1 74 118 Z" />
+      </g>
+    ),
+  },
+  apagon: {
+    ms: 3200,
+    modes: ['terror'],
+    render: () => (
+      <g className="blackout">
+        <TerrorEyes className="" />
+      </g>
+    ),
+  },
   dormir: { ms: Infinity, render: () => FACES.dormido() },
 };
 
@@ -225,10 +314,36 @@ export function idleActionsFor(style) {
   return Object.keys(IDLE_ACTIONS).filter((a) => a !== 'dormir' && (!IDLE_ACTIONS[a].modes || IDLE_ACTIONS[a].modes.includes(style)));
 }
 
-export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno' }) {
+const FADE_MS = 380;
+
+function renderLayer({ emotion, action, faceStyle }) {
   const idle = action && IDLE_ACTIONS[action];
   const render = idle ? idle.render : FACES[emotion] || FACES.neutral;
-  const key = `${faceStyle}-${idle ? `idle-${action}` : emotion}`;
+  return render(faceStyle);
+}
+
+/**
+ * Cara con fundido cruzado: cuando cambia la emoción, la acción o el estilo, la cara anterior
+ * se desvanece mientras aparece la nueva (en vez de cambiar de golpe).
+ */
+export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno' }) {
+  const key = `${faceStyle}-${action ? `idle-${action}` : emotion}`;
+  const [layers, setLayers] = useState(() => [{ key, emotion, action, faceStyle, leaving: false }]);
+  const timers = useRef([]);
+
+  useEffect(() => {
+    setLayers((prev) => {
+      const current = prev[prev.length - 1];
+      if (current && current.key === key) return prev;
+      // la capa actual pasa a "saliendo"; las que ya salían se descartan
+      return [...(current ? [{ ...current, leaving: true }] : []), { key, emotion, action, faceStyle, leaving: false }];
+    });
+    const t = setTimeout(() => setLayers((prev) => prev.filter((l) => !l.leaving)), FADE_MS);
+    timers.current.push(t);
+  }, [key, emotion, action, faceStyle]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
   return (
     <div className={`face-shell ${onPet ? 'pettable' : ''}`} style={{ width: size }} onClick={onPet} title={onPet ? 'Haceme un mimo' : undefined}>
       <svg
@@ -239,9 +354,11 @@ export default function Face({ emotion = 'neutral', action = null, size = 320, o
         aria-label={`Cara: ${EMOTION_LABELS[emotion] || emotion}`}
       >
         <rect className="screen" x="0" y="0" width="240" height="180" rx="36" />
-        <g key={key} className="face-enter">
-          {render(faceStyle)}
-        </g>
+        {layers.map((l) => (
+          <g key={l.key} className={l.leaving ? 'face-leave' : 'face-enter'}>
+            {renderLayer(l)}
+          </g>
+        ))}
       </svg>
     </div>
   );

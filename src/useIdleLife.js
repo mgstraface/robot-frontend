@@ -12,10 +12,10 @@ const rand = ([min, max]) => min + Math.random() * (max - min);
 
 /**
  * "Vida propia": mientras la emoción es neutral, programa acciones al azar
- * (mirar, pelota, pensar, bostezo, tararear o curiosear; en estilo terror, acechar y glitch) y lo duerme si pasa mucho tiempo sin actividad.
+ * (las de IDLE_ACTIONS según el estilo de cara) y lo duerme de noche o si pasa mucho tiempo sin actividad.
  * poke() registra actividad: corta la acción en curso y lo despierta.
  */
-export function useIdleLife({ emotion, enabled, faceStyle = 'tierno' }) {
+export function useIdleLife({ emotion, enabled, faceStyle = 'tierno', night = false }) {
   const [action, setAction] = useState(null);
   const [pokes, setPokes] = useState(0);
   const lastActivity = useRef(Date.now());
@@ -33,8 +33,9 @@ export function useIdleLife({ emotion, enabled, faceStyle = 'tierno' }) {
     if (!enabled || emotion !== 'neutral') return undefined;
 
     const next = () => {
-      if (Date.now() - lastActivity.current > SLEEP_AFTER) {
-        setAction('dormir'); // queda dormido hasta el próximo poke()
+      // De noche (horario de dormir de Rutinas) o tras mucho rato sin actividad, se duerme
+      if (night || Date.now() - lastActivity.current > SLEEP_AFTER) {
+        setAction('dormir'); // queda dormido hasta el próximo poke() o hasta que se haga de día
         return;
       }
       const options = idleActionsFor(faceStyle).filter((a) => a !== lastAction.current);
@@ -49,7 +50,7 @@ export function useIdleLife({ emotion, enabled, faceStyle = 'tierno' }) {
 
     timer.current = setTimeout(next, rand(FIRST_DELAY));
     return () => clearTimeout(timer.current);
-  }, [emotion, enabled, pokes, faceStyle]);
+  }, [emotion, enabled, pokes, faceStyle, night]);
 
   return { action, poke };
 }

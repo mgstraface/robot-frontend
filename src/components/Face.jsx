@@ -71,6 +71,70 @@ function Fangs() {
   );
 }
 
+// Ojo en espiral (mareado): espiral de Arquímedes de dos vueltas y media
+function spiralPath(cx, cy) {
+  const pts = [];
+  for (let i = 0; i <= 90; i++) {
+    const t = (i / 90) * Math.PI * 5;
+    const r = 1.5 + (t / (Math.PI * 5)) * 17;
+    pts.push(`${(cx + r * Math.cos(t)).toFixed(1)} ${(cy + r * Math.sin(t)).toFixed(1)}`);
+  }
+  return `M${pts.join(' L')}`;
+}
+
+function Spiral({ cx }) {
+  return <path className="eye-line spiral" style={{ transformOrigin: `${cx}px ${Y}px` }} d={spiralPath(cx, Y)} />;
+}
+
+// Íconos del clima (estilo AIBI): arriba de los ojos, que miran hacia el ícono
+function WeatherIcon({ kind }) {
+  const cloud = (cls = 'cloud') => (
+    <g className={cls}>
+      <ellipse cx="108" cy="44" rx="20" ry="13" />
+      <ellipse cx="130" cy="38" rx="18" ry="16" />
+      <ellipse cx="146" cy="47" rx="14" ry="10" />
+      <rect x="92" y="44" width="66" height="13" rx="6" />
+    </g>
+  );
+  if (kind === 'despejado' || kind === 'parcial') {
+    return (
+      <g>
+        <g className="sun">
+          <circle cx="120" cy="40" r="13" />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+            <rect key={a} x="118" y="15" width="4" height="9" rx="2" transform={`rotate(${a} 120 40)`} />
+          ))}
+        </g>
+        {kind === 'parcial' && <g transform="translate(14 6) scale(0.8)">{cloud()}</g>}
+      </g>
+    );
+  }
+  if (kind === 'niebla') {
+    return (
+      <g className="fog">
+        <rect x="86" y="28" width="68" height="5" rx="2.5" />
+        <rect x="96" y="40" width="62" height="5" rx="2.5" />
+        <rect x="84" y="52" width="56" height="5" rx="2.5" />
+      </g>
+    );
+  }
+  const drops = kind === 'nieve' ? 'flake' : 'drop';
+  return (
+    <g>
+      {cloud()}
+      {(kind === 'lluvia' || kind === 'tormenta' || kind === 'nieve') &&
+        [100, 116, 132, 148].map((x, i) =>
+          drops === 'flake' ? (
+            <circle key={x} className="flake" cx={x} cy="64" r="2.5" style={{ animationDelay: `${i * 0.25}s` }} />
+          ) : (
+            <rect key={x} className="drop" x={x} y="62" width="3" height="9" rx="1.5" style={{ animationDelay: `${i * 0.2}s` }} />
+          )
+        )}
+      {kind === 'tormenta' && <path className="bolt" d="M126 56 L116 72 L124 72 L118 86 L134 66 L126 66 L132 56 Z" />}
+    </g>
+  );
+}
+
 const FACES = {
   neutral: (style) =>
     style === 'terror' ? (
@@ -140,6 +204,13 @@ const FACES = {
       <text className="zzz zzz-2" x={R + 46} y={Y - 42}>z</text>
     </g>
   ),
+  mareado: () => (
+    <g className="woozy">
+      <Spiral cx={L} />
+      <Spiral cx={R} />
+      <path className="eye-line" d="M100 140 q5 -6 10 0 t10 0 t10 0 t10 0" />
+    </g>
+  ),
   amor: () => (
     <g className="beat">
       <Heart cx={L} />
@@ -165,6 +236,7 @@ export const EMOTION_LABELS = {
   amor: 'Amor',
   curioso: 'Curioso',
   escuchando: 'Escuchando',
+  mareado: 'Mareado',
 };
 
 // Acciones de "vida propia": lo que hace solo cuando está en neutral y nadie le da bola.
@@ -306,20 +378,49 @@ export const IDLE_ACTIONS = {
       </g>
     ),
   },
+  // Clima animado (lo dispara el saludo o el panel; no es parte de la vida propia al azar)
+  clima: {
+    ms: 5200,
+    manual: true,
+    render: (style, kind = 'despejado') => (
+      <g>
+        <g transform="translate(0 22)">
+          {style === 'terror' ? (
+            <TerrorEyes />
+          ) : (
+            <g className="blink">
+              <Eye cx={L} w={36} h={42} dy={0} />
+              <Eye cx={R} w={36} h={42} dy={0} />
+            </g>
+          )}
+        </g>
+        {/* el ícono va arriba de todo, para que los párpados del estilo terror no lo tapen */}
+        <WeatherIcon kind={kind} />
+      </g>
+    ),
+  },
   dormir: { ms: Infinity, render: () => FACES.dormido() },
 };
 
 /** Acciones de vida propia disponibles para un estilo de cara. */
 export function idleActionsFor(style) {
-  return Object.keys(IDLE_ACTIONS).filter((a) => a !== 'dormir' && (!IDLE_ACTIONS[a].modes || IDLE_ACTIONS[a].modes.includes(style)));
+  return Object.keys(IDLE_ACTIONS).filter(
+    (a) => a !== 'dormir' && !IDLE_ACTIONS[a].manual && (!IDLE_ACTIONS[a].modes || IDLE_ACTIONS[a].modes.includes(style))
+  );
 }
 
 const FADE_MS = 380;
 
+/** Duración de una acción ("clima:lluvia" → la de "clima"). */
+export function actionMs(action) {
+  return IDLE_ACTIONS[String(action).split(':')[0]]?.ms ?? 3000;
+}
+
 function renderLayer({ emotion, action, faceStyle }) {
-  const idle = action && IDLE_ACTIONS[action];
-  const render = idle ? idle.render : FACES[emotion] || FACES.neutral;
-  return render(faceStyle);
+  const [name, param] = action ? String(action).split(':') : [];
+  const idle = name && IDLE_ACTIONS[name];
+  if (idle) return idle.render(faceStyle, param);
+  return (FACES[emotion] || FACES.neutral)(faceStyle);
 }
 
 /**

@@ -46,6 +46,17 @@ export const api = {
   status: () => request('/robot/status'),
   expression: (emotion, deviceId) => request('/robot/expression', { method: 'POST', body: { emotion, deviceId } }),
   say: (text, emotion, deviceId) => request('/robot/say', { method: 'POST', body: { text, emotion, deviceId } }),
+  settings: () => request('/settings'),
+  saveSettings: (data) => request('/settings', { method: 'PUT', body: data }),
+  geo: (q) => request(`/geo?q=${encodeURIComponent(q)}`),
+  weather: () => request('/weather'),
+  calendarUpcoming: () => request('/calendar/upcoming'),
+  briefing: () => request('/briefing', { method: 'POST' }),
+  feed: (after) => request(`/feed?after=${after}`),
+  focus: () => request('/focus'),
+  startFocus: (minutes) => request('/focus', { method: 'POST', body: { minutes } }),
+  stopFocus: () => request('/focus', { method: 'DELETE' }),
+  action: (action, weather) => request('/action', { method: 'POST', body: { action, weather } }),
   chat: (text, speakOn) => request('/chat', { method: 'POST', body: { text, deviceId: 'panel', speakOn } }),
   // Devuelve un Blob de audio (WAV) con la voz del servidor
   tts: async (text) => {

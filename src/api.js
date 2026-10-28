@@ -1,0 +1,50 @@
+const BASE = import.meta.env.VITE_API_URL || '';
+const TOKEN_KEY = 'robot_admin_token';
+
+export function getToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function setToken(token) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* sin storage: el token dura lo que la pestaña */
+  }
+}
+
+export class UnauthorizedError extends Error {}
+
+async function request(path, { method = 'GET', body, token = getToken() } = {}) {
+  const res = await fetch(`${BASE}/api${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) throw new UnauthorizedError('Token inválido');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  return data;
+}
+
+export const api = {
+  config: (token) => request('/config', { token }),
+  getPersonality: () => request('/personality'),
+  savePersonality: (data) => request('/personality', { method: 'PUT', body: data }),
+  messages: (deviceId, limit = 100) =>
+    request(`/messages?limit=${limit}${deviceId ? `&deviceId=${encodeURIComponent(deviceId)}` : ''}`),
+  clearMessages: (deviceId) =>
+    request(`/messages${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ''}`, { method: 'DELETE' }),
+  status: () => request('/robot/status'),
+  expression: (emotion, deviceId) => request('/robot/expression', { method: 'POST', body: { emotion, deviceId } }),
+  say: (text, emotion, deviceId) => request('/robot/say', { method: 'POST', body: { text, emotion, deviceId } }),
+  chat: (text, speakOn) => request('/chat', { method: 'POST', body: { text, deviceId: 'panel', speakOn } }),
+};

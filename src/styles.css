@@ -736,14 +736,14 @@ label {
   margin-bottom: 0.5rem;
 }
 .tabs {
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-wrap: wrap;
+  border-radius: 18px;
 }
 .tabs::-webkit-scrollbar {
   display: none;
 }
 .tabs button {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   white-space: nowrap;
   background: transparent;
   color: var(--muted);

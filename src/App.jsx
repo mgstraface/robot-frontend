@@ -38,7 +38,7 @@ const TRIVIA_PROMPT =
 const SINO_PROMPT =
   'Juguemos a "sí o no": yo te hago preguntas y vos respondés como una bola 8 mágica, misterioso y en una sola frase corta, siempre moviendo la cabeza (asentir o negar). Arrancá diciendo que estás listo.';
 
-const KIND_LABELS = { saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
+const KIND_LABELS = { timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
 
 function pcVoiceOn() {
   try {

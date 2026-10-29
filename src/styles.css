@@ -1369,3 +1369,59 @@ label {
 .blush { opacity: 0.85; }
 .sweat { fill: #7cc7ff; animation: float 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tear-stream, .qmark, .twinkle, .sweat { animation: none; } }
+
+/* ---------- Cuerpo (vista previa de los servos) ---------- */
+.stage-figure { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+.body { width: 120px; height: auto; flex: none; }
+.body-base { fill: #6f6f76; }
+.body-bone { fill: #e6dcc4; stroke: #6b6250; stroke-width: 1.5; }
+.body-rib { fill: none; stroke: #6b6250; stroke-width: 1.5; }
+.body-arm { fill: none; stroke: #e6dcc4; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.body-screen { fill: #0b0e12; }
+.body-eye { fill: var(--eye, #5ef2ff); }
+.arm { transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1); transform: rotate(var(--a, 0deg)); }
+.arm-l { transform-origin: 50px 100px; }
+.arm-r { transform-origin: 90px 100px; }
+.body-head {
+  transform-origin: 70px 84px;
+  transform: translateX(var(--pan, 0px)) rotate(var(--tilt, 0deg));
+  transition: transform 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+/* gestos de cabeza en el cuerpo */
+.b-asentir .body-head { animation: bh-nod 1.2s ease-in-out; }
+.b-negar .body-head { animation: bh-shake 1.3s ease-in-out; }
+@keyframes bh-nod { 20%, 60% { transform: translateY(4px) scaleY(0.94); } 40%, 80% { transform: translateY(-2px); } }
+@keyframes bh-shake { 15%, 55% { transform: translateX(-8px); } 35%, 75% { transform: translateX(8px); } }
+/* gestos de brazos (el robot hace lo mismo con los servos de los hombros) */
+.b-saludar .arm-r { animation: ba-wave 2.2s ease-in-out; }
+@keyframes ba-wave { 15% { transform: rotate(-150deg); } 30%, 60% { transform: rotate(-120deg); } 45%, 75% { transform: rotate(-160deg); } 90% { transform: rotate(-140deg); } }
+.b-festejar .arm-l { animation: ba-up-l 2.4s ease-in-out; }
+.b-festejar .arm-r { animation: ba-up-r 2.4s ease-in-out; }
+@keyframes ba-up-l { 15%, 30%, 55%, 80% { transform: rotate(165deg); } 42%, 68% { transform: rotate(140deg); } }
+@keyframes ba-up-r { 15%, 30%, 55%, 80% { transform: rotate(-165deg); } 42%, 68% { transform: rotate(-140deg); } }
+.b-aplaudir .arm-l { animation: ba-clap-l 2s ease-in-out; }
+.b-aplaudir .arm-r { animation: ba-clap-r 2s ease-in-out; }
+@keyframes ba-clap-l { 10%, 30%, 50%, 70% { transform: rotate(-70deg); } 20%, 40%, 60%, 80% { transform: rotate(-40deg); } }
+@keyframes ba-clap-r { 10%, 30%, 50%, 70% { transform: rotate(70deg); } 20%, 40%, 60%, 80% { transform: rotate(40deg); } }
+.b-hombros .arm-l { animation: ba-shrug-l 1.6s ease-in-out; }
+.b-hombros .arm-r { animation: ba-shrug-r 1.6s ease-in-out; }
+@keyframes ba-shrug-l { 25%, 70% { transform: rotate(45deg); } }
+@keyframes ba-shrug-r { 25%, 70% { transform: rotate(-45deg); } }
+.b-taparse .arm-l { animation: ba-cover-l 2.4s ease-in-out; }
+.b-taparse .arm-r { animation: ba-cover-r 2.4s ease-in-out; }
+@keyframes ba-cover-l { 20%, 80% { transform: rotate(-150deg); } }
+@keyframes ba-cover-r { 20%, 80% { transform: rotate(150deg); } }
+.b-abrazo .arm-l { animation: ba-hug-l 2.2s ease-in-out; }
+.b-abrazo .arm-r { animation: ba-hug-r 2.2s ease-in-out; }
+@keyframes ba-hug-l { 20% { transform: rotate(-90deg); } 50%, 80% { transform: rotate(-55deg); } }
+@keyframes ba-hug-r { 20% { transform: rotate(90deg); } 50%, 80% { transform: rotate(55deg); } }
+.b-bailar .arm-l { animation: ba-dance-l 0.8s ease-in-out 4; }
+.b-bailar .arm-r { animation: ba-dance-r 0.8s ease-in-out 4; }
+.b-bailar .body-head { animation: bh-dance 0.8s ease-in-out 4; }
+@keyframes ba-dance-l { 50% { transform: rotate(110deg); } }
+@keyframes ba-dance-r { 0%, 100% { transform: rotate(-110deg); } 50% { transform: rotate(-10deg); } }
+@keyframes bh-dance { 25% { transform: translateX(-6px) rotate(-6deg); } 75% { transform: translateX(6px) rotate(6deg); } }
+.b-senalar .arm-r { animation: ba-point 1.8s ease-in-out; }
+@keyframes ba-point { 20%, 80% { transform: rotate(-95deg); } 40% { transform: rotate(-85deg); } 60% { transform: rotate(-100deg); } }
+@media (prefers-reduced-motion: reduce) { .body *, .body { animation: none !important; transition: none !important; } }
+@media (max-width: 520px) { .body { width: 90px; } }

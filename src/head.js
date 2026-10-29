@@ -15,6 +15,18 @@ export const GESTURE_LABELS = {
   ladear: 'Ladear',
 };
 
+// Movimientos de brazos (servos de los hombros). Algunos también mueven la cabeza.
+export const ARM_LABELS = {
+  saludar: 'Saludar',
+  festejar: 'Festejar',
+  aplaudir: 'Aplaudir',
+  hombros: 'No sé',
+  taparse: 'Taparse',
+  abrazo: 'Abrazo',
+  bailar: 'Bailar',
+  senalar: 'Señalar',
+};
+
 // Duración de cada gesto (ms); el robot usa las mismas
 export const GESTURE_MS = {
   asentir: 1200,
@@ -24,6 +36,14 @@ export const GESTURE_MS = {
   mirarIzquierda: 1600,
   mirarDerecha: 1600,
   ladear: 1600,
+  saludar: 2200,
+  festejar: 2400,
+  aplaudir: 2000,
+  hombros: 1600,
+  taparse: 2400,
+  abrazo: 2200,
+  bailar: 3200,
+  senalar: 1800,
 };
 
 // Postura de la cabeza según la emoción

@@ -12,7 +12,8 @@ import PhotosPanel from './components/PhotosPanel.jsx';
 import GamesPanel from './components/GamesPanel.jsx';
 import TatetiGame from './components/games/TatetiGame.jsx';
 import TrucoGame from './components/games/TrucoGame.jsx';
-import { GESTURE_LABELS, useHead } from './head.js';
+import { ARM_LABELS, GESTURE_LABELS, useHead } from './head.js';
+import Body from './components/Body.jsx';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
 import { photoUrl } from './photos.js';
@@ -486,10 +487,13 @@ export default function App() {
             {game === 'ojo' && <CatchGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {!game && (
             <>
-            <div className="head" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }}>
-              <div className={`head-gesture ${head.gesture ? `g-${head.gesture}` : ''}`}>
-                <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} talking={talking && !action} />
+            <div className="stage-figure">
+              <div className="head" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }}>
+                <div className={`head-gesture ${head.gesture ? `g-${head.gesture}` : ''}`}>
+                  <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} talking={talking && !action} />
+                </div>
               </div>
+              <Body pose={head.pose} gesture={head.gesture} emotion={emotion} eyeColor={look.eyeColor} />
             </div>
             <div className="expressions" role="group" aria-label="Expresiones">
               {cfg.emotions.map((e) => (
@@ -505,7 +509,7 @@ export default function App() {
               ))}
             </div>
             <div className="expressions gestures" role="group" aria-label="Movimientos de cabeza">
-              {Object.entries(GESTURE_LABELS).map(([g, label]) => (
+              {Object.entries({ ...GESTURE_LABELS, ...ARM_LABELS }).map(([g, label]) => (
                 <button key={g} type="button" className="chip" onClick={() => sendGesture(g)}>
                   {label}
                 </button>

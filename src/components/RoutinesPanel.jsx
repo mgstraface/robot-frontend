@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { speak } from '../speech.js';
 import { api } from '../api.js';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -14,6 +15,14 @@ function timeOf(ts, tz) {
  * Rutinas: saludo con clima y agenda, horario de dormir, agua, modo susto, avisos de reuniones y deploys.
  * onPlay(actions, weather) muestra una animación en la cara grande.
  */
+const VOCES = {
+  'es-AR-TomasNeural': 'Tomás (argentino)',
+  'es-AR-ElenaNeural': 'Elena (argentina)',
+  'es-MX-JorgeNeural': 'Jorge (neutro)',
+  'es-US-AlonsoNeural': 'Alonso (neutro)',
+  'es-MX-DaliaNeural': 'Dalia (neutra)',
+};
+
 export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed }) {
   const [saved, setSaved] = useState(null);
   const [form, setForm] = useState(null);
@@ -38,13 +47,22 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
 
   if (!form) return <p className="muted">Cargando…</p>;
 
+  async function probarVoz() {
+    setBusy('voz');
+    try {
+      await speak(`Hola ${form.ownerName || ''}, soy tu robot. ¿Te gusta cómo hablo?`, { serverVoice: true });
+    } finally {
+      setBusy('');
+    }
+  }
+
   const set = (patch) => {
     setStatus('');
     setForm({ ...form, ...patch });
   };
 
   const changed = {};
-  for (const k of ['ownerName', 'sleepFrom', 'sleepTo', 'morningGreeting', 'scaresPerDay', 'waterEveryMin', 'meetingNoticeMin', 'deployReactions', 'futbol', 'frasesCadaHoras', 'timezone']) {
+  for (const k of ['ownerName', 'sleepFrom', 'sleepTo', 'morningGreeting', 'scaresPerDay', 'waterEveryMin', 'meetingNoticeMin', 'deployReactions', 'futbol', 'frasesCadaHoras', 'voz', 'vozTono', 'timezone']) {
     if (form[k] !== saved[k]) changed[k] = form[k];
   }
   const frasesText = (form.frasesLeprosas || []).join('\n');
@@ -86,6 +104,26 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
       <h3>Vos</h3>
       <label htmlFor="owner">Cómo te llama</label>
       <input id="owner" value={form.ownerName} maxLength={40} onChange={(e) => set({ ownerName: e.target.value })} />
+
+      <label htmlFor="voz">Voz del robot</label>
+      <div className="row">
+        <select id="voz" value={form.voz || 'es-AR-TomasNeural'} onChange={(e) => set({ voz: e.target.value })}>
+          {Object.entries(VOCES).map(([id, label]) => (
+            <option key={id} value={id}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select value={form.vozTono || 'normal'} onChange={(e) => set({ vozTono: e.target.value })} aria-label="Tono">
+          <option value="normal">Tono normal</option>
+          <option value="agudo">Más agudo</option>
+          <option value="grave">Más grave</option>
+        </select>
+        <button type="button" className="ghost" onClick={probarVoz} disabled={busy === 'voz'}>
+          {busy === 'voz' ? 'Hablando…' : 'Escuchar'}
+        </button>
+      </div>
+      <p className="hint">Voces gratis de Microsoft. Guardá para que el robot use la nueva; "Escuchar" prueba la que está guardada.</p>
 
       <h3>Saludo y clima</h3>
       <p className="hint">

@@ -48,12 +48,20 @@ function Column({ x, points, meta }) {
   return <g>{groups}</g>;
 }
 
+const HOLD_MS = 600; // mantener apretado = restar uno
+const RESET_MS = 2500; // mantener el medio = nueva partida
+
+/**
+ * Anotador de truco pensado para la pantalla táctil del robot (sin botones):
+ * tocar la mitad izquierda suma 1 a "Nos", la derecha a "Ellos";
+ * mantener apretado resta 1; mantener el centro (la línea) un rato empieza otra partida.
+ */
 export default function TrucoGame({ eyeColor, faceStyle, onExit }) {
   const [st, setSt] = useState(load);
-  const [flash, setFlash] = useState(null); // emoción breve después de anotar
+  const [pop, setPop] = useState(null); // { team, text } cartelito "+1" / "−1"
   const [msg, setMsg] = useState('');
-  const timer = useRef(null);
-  const terror = faceStyle === 'terror';
+  const press = useRef(null);
+  const popTimer = useRef(null);
 
   useEffect(() => {
     try {
@@ -62,13 +70,15 @@ export default function TrucoGame({ eyeColor, faceStyle, onExit }) {
       /* sin almacenamiento */
     }
   }, [st]);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => {
+    clearTimeout(popTimer.current);
+    clearTimeout(press.current?.t);
+  }, []);
 
-  function react(emotion, text, ms = 1300) {
-    clearTimeout(timer.current);
-    setFlash(emotion);
-    setMsg(text);
-    timer.current = setTimeout(() => setFlash(null), ms);
+  function showPop(team, text) {
+    clearTimeout(popTimer.current);
+    setPop({ team, text, id: Date.now() });
+    popTimer.current = setTimeout(() => setPop(null), 700);
   }
 
   function add(team, delta) {
@@ -76,75 +86,104 @@ export default function TrucoGame({ eyeColor, faceStyle, onExit }) {
       const before = s[team];
       const after = Math.max(0, Math.min(s.meta, before + delta));
       if (after === before) return s;
-      const next = { ...s, [team]: after };
       const half = s.meta / 2;
-      if (delta > 0) {
-        if (after === s.meta) {
-          react(team === 'nos' ? 'riendo' : terror ? 'enojado' : 'triste', team === 'nos' ? '¡GANAMOS! ¡Qué paliza!' : 'Perdimos… revancha ya.', 4000);
-        } else if (s.meta === 30 && before < half && after >= half) {
-          react('sorprendido', team === 'nos' ? '¡Entramos en las buenas!' : 'Ellos ya están en las buenas…');
-        } else if (team === 'nos') {
-          react('feliz', delta >= 3 ? '¡Vamos todavía!' : '¡Bien ahí!');
-        } else {
-          react(terror ? 'enojado' : 'triste', delta >= 3 ? 'Uh… nos cantaron bien' : 'Mmm…');
-        }
-      }
-      return next;
+      if (after === s.meta) setMsg(team === 'nos' ? '¡GANAMOS!' : 'Ganaron ellos… revancha');
+      else if (s.meta === 30 && before < half && after >= half) setMsg(team === 'nos' ? 'Entramos en las buenas' : 'Ellos entraron en las buenas');
+      else setMsg('');
+      return { ...s, [team]: after };
     });
+    showPop(team, delta > 0 ? '+1' : '−1');
   }
 
   function reset(meta = st.meta) {
     setSt({ nos: 0, ellos: 0, meta });
-    setMsg('');
-    setFlash(null);
+    setMsg('Partida nueva');
+  }
+
+  // Toques: corto = +1, largo = −1. En el centro, largo = partida nueva.
+  function down(zone, e) {
+    e.stopPropagation();
+    clearTimeout(press.current?.t);
+    const held = zone === 'centro' ? RESET_MS : HOLD_MS;
+    press.current = {
+      zone,
+      done: false,
+      t: setTimeout(() => {
+        press.current.done = true;
+        if (zone === 'centro') reset();
+        else add(zone, -1);
+      }, held),
+    };
+  }
+  function up(e) {
+    e.stopPropagation();
+    const p = press.current;
+    if (!p) return;
+    clearTimeout(p.t);
+    if (!p.done && p.zone !== 'centro') add(p.zone, 1);
+    press.current = null;
+  }
+  function cancel() {
+    clearTimeout(press.current?.t);
+    press.current = null;
   }
 
   const half = st.meta / 2;
   const phase = (p) => (st.meta === 15 ? `${p}` : p <= half ? `${p} malas` : `${p - half} buenas`);
+  const zone = (name, x, w) => (
+    <rect
+      x={x}
+      y="0"
+      width={w}
+      height="180"
+      className="truco-zone"
+      onPointerDown={(e) => down(name, e)}
+      onPointerUp={up}
+      onPointerLeave={cancel}
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
 
   return (
     <>
-      {flash ? (
-        <Face size={340} eyeColor={eyeColor} faceStyle={faceStyle} emotion={flash} />
-      ) : (
-        <Face size={340} eyeColor={eyeColor} faceStyle={faceStyle}>
-          <g className="truco">
-            <text className="truco-title" x="60" y="22" textAnchor="middle">NOS</text>
-            <text className="truco-title" x="180" y="22" textAnchor="middle">ELLOS</text>
-            <line className="truco-sep" x1="120" y1="10" x2="120" y2="170" />
-            {st.meta === 30 && <line className="truco-sep" x1="24" y1="98" x2="216" y2="98" />}
-            <Column x={52} points={st.nos} meta={st.meta} />
-            <Column x={172} points={st.ellos} meta={st.meta} />
-          </g>
-        </Face>
-      )}
+      <Face size={340} eyeColor={eyeColor} faceStyle={faceStyle}>
+        <g className="truco">
+          <text className="truco-title" x="60" y="22" textAnchor="middle">NOS</text>
+          <text className="truco-title" x="180" y="22" textAnchor="middle">ELLOS</text>
+          <line className="truco-sep" x1="120" y1="10" x2="120" y2="170" />
+          {st.meta === 30 && <line className="truco-sep" x1="24" y1="98" x2="216" y2="98" />}
+          <Column x={52} points={st.nos} meta={st.meta} />
+          <Column x={172} points={st.ellos} meta={st.meta} />
+          {pop && (
+            <text key={pop.id} className="truco-pop" x={pop.team === 'nos' ? 96 : 216} y="60" textAnchor="middle">
+              {pop.text}
+            </text>
+          )}
+          {msg && (
+            <text className="truco-msg" x="120" y="172" textAnchor="middle">
+              {msg}
+            </text>
+          )}
+          {zone('nos', 0, 110)}
+          {zone('ellos', 130, 110)}
+          {zone('centro', 110, 20)}
+        </g>
+      </Face>
 
       <p className="game-score" aria-live="polite">
         Nos {phase(st.nos)} · Ellos {phase(st.ellos)}
-        {msg && ` — ${msg}`}
       </p>
-      <div className="game-controls truco-controls">
-        <div className="truco-team">
-          <strong>Nos</strong>
-          <button type="button" onClick={() => add('nos', 1)}>+1</button>
-          <button type="button" onClick={() => add('nos', 2)}>+2</button>
-          <button type="button" onClick={() => add('nos', 3)}>+3</button>
-          <button type="button" className="ghost" onClick={() => add('nos', -1)} aria-label="Restar uno a nosotros">−1</button>
-        </div>
-        <div className="truco-team">
-          <strong>Ellos</strong>
-          <button type="button" onClick={() => add('ellos', 1)}>+1</button>
-          <button type="button" onClick={() => add('ellos', 2)}>+2</button>
-          <button type="button" onClick={() => add('ellos', 3)}>+3</button>
-          <button type="button" className="ghost" onClick={() => add('ellos', -1)} aria-label="Restar uno a ellos">−1</button>
-        </div>
-        <div className="truco-team">
-          <button type="button" className="ghost" onClick={() => reset()}>Nueva partida</button>
-          <button type="button" className="ghost" onClick={() => reset(st.meta === 30 ? 15 : 30)}>
-            A {st.meta === 30 ? 15 : 30}
-          </button>
-          <button type="button" className="ghost" onClick={onExit}>Salir</button>
-        </div>
+      <p className="hint">
+        Igual que en el robot: tocá tu lado para sumar 1 (tocá dos veces para 2), mantené apretado para restar 1, y mantené la línea del medio
+        para empezar otra partida.
+      </p>
+      <div className="game-controls">
+        <button type="button" className="ghost" onClick={() => reset(st.meta === 30 ? 15 : 30)}>
+          Jugar a {st.meta === 30 ? 15 : 30}
+        </button>
+        <button type="button" className="ghost" onClick={onExit}>
+          Salir
+        </button>
       </div>
     </>
   );

@@ -103,7 +103,9 @@ export default function App() {
   const [life, setLife] = useState(loadLifePref);
   const [appearance, setAppearance] = useState({ eyeColor: '#5ef2ff', faceStyle: 'tierno' });
   const [draftAppearance, setDraftAppearance] = useState(null);
-  const look = draftAppearance || appearance;
+  // En Halloween el robot se pone en modo terror todo el día (salvo que estés probando otra apariencia)
+  const baseLook = draftAppearance || appearance;
+  const look = cfg?.halloween && !draftAppearance ? { ...baseLook, faceStyle: 'terror' } : baseLook;
   const [settings, setSettings] = useState(null);
   const [night, setNight] = useState(false);
   const [focus, setFocus] = useState(null);
@@ -462,6 +464,7 @@ export default function App() {
         </div>
         <div className="status-pills">
           {cfg.env === 'dev' && <span className="pill dev">Entorno de pruebas</span>}
+          {cfg.halloween && <span className="pill halloween">Modo Halloween</span>}
           <span className={`pill ${robotId ? 'on' : 'off'}`}>
             <i />
             {robotId ? `${devices.length} robot${devices.length > 1 ? 's' : ''} conectado${devices.length > 1 ? 's' : ''}` : 'Robot desconectado'}

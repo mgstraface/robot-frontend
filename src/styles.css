@@ -1357,3 +1357,4 @@ label {
 .truco-zone { fill: transparent; cursor: pointer; touch-action: manipulation; }
 .truco-pop { fill: #fff; font: 800 22px 'Space Grotesk', sans-serif; animation: note-float 0.7s ease-out forwards; }
 .truco-msg { fill: var(--eye); font: 700 12px 'Space Grotesk', sans-serif; }
+.pill.halloween { background: #ff7a1a; color: #1a0d00; border-color: #ff7a1a; }

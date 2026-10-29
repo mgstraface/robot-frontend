@@ -71,6 +71,30 @@ function Fangs() {
   );
 }
 
+// Bocas (debajo de los ojos). Si está hablando, cualquier boca pasa a ser la que se mueve.
+const MOUTHS = {
+  sonrisa: <path className="mouth-line" d="M100 140 Q120 158 140 140" />,
+  sonrisita: <path className="mouth-line" d="M108 142 Q120 151 132 142" />,
+  triste: <path className="mouth-line" d="M102 152 Q120 138 138 152" />,
+  o: <ellipse className="mouth" cx="120" cy="147" rx="8" ry="10" />,
+  grr: <path className="mouth-line thin" d="M96 150 l8 -7 l8 7 l8 -7 l8 7 l8 -7 l8 7" />,
+  picara: <path className="mouth-line" d="M106 146 Q126 152 142 138" />,
+  recta: <path className="mouth-line" d="M106 147 L134 147" />,
+  ondulada: <path className="mouth-line thin" d="M96 148 q6 -6 12 0 t12 0 t12 0 t12 0" />,
+  carcajada: <path className="mouth" d="M92 136 L148 136 Q146 164 120 164 Q94 164 92 136 Z" />,
+  lengua: (
+    <g>
+      <path className="mouth-line" d="M100 138 Q120 154 140 138" />
+      <path className="tongue" d="M112 146 L128 146 L128 156 Q120 166 112 156 Z" />
+    </g>
+  ),
+};
+
+function Mouth({ kind, talking }) {
+  if (talking) return <ellipse className="mouth talk" cx="120" cy="146" rx="12" ry="9" />;
+  return kind ? MOUTHS[kind] : null;
+}
+
 // Ojo en espiral (mareado): espiral de Arquímedes de dos vueltas y media
 function spiralPath(cx, cy) {
   const pts = [];
@@ -136,13 +160,19 @@ function WeatherIcon({ kind }) {
 }
 
 const FACES = {
-  neutral: (style) =>
+  neutral: (style, talking) =>
     style === 'terror' ? (
-      <TerrorEyes />
+      <g>
+        <TerrorEyes />
+        <Mouth talking={talking} />
+      </g>
     ) : (
-      <g className="blink">
-        <Eye cx={L} />
-        <Eye cx={R} />
+      <g>
+        <g className="blink">
+          <Eye cx={L} />
+          <Eye cx={R} />
+        </g>
+        <Mouth talking={talking} />
       </g>
     ),
   escuchando: () => (
@@ -151,36 +181,46 @@ const FACES = {
       <Eye cx={R} w={44} h={60} />
     </g>
   ),
-  feliz: () => (
+  feliz: (style, talking) => (
     <g>
       <path className="eye-line" d={`M ${L - 22} ${Y + 8} Q ${L} ${Y - 26} ${L + 22} ${Y + 8}`} />
       <path className="eye-line" d={`M ${R - 22} ${Y + 8} Q ${R} ${Y - 26} ${R + 22} ${Y + 8}`} />
       <ellipse className="cheek" cx={L - 18} cy={Y + 30} rx="12" ry="6" />
       <ellipse className="cheek" cx={R + 18} cy={Y + 30} rx="12" ry="6" />
+      <Mouth kind="sonrisa" talking={talking} />
     </g>
   ),
-  triste: () => (
-    <g className="blink">
-      <Eye cx={L} dy={6} h={48} />
-      <Eye cx={R} dy={6} h={48} />
+  triste: (style, talking) => (
+    <g>
+      <g className="blink">
+        <Eye cx={L} dy={6} h={48} />
+        <Eye cx={R} dy={6} h={48} />
+      </g>
       <Lid cx={L} side="L" inner={8} outer={28} />
       <Lid cx={R} side="R" inner={8} outer={28} />
+      <Mouth kind="triste" talking={talking} />
     </g>
   ),
-  enojado: () => (
-    <g className="blink">
-      <Eye cx={L} />
-      <Eye cx={R} />
+  enojado: (style, talking) => (
+    <g>
+      <g className="blink">
+        <Eye cx={L} />
+        <Eye cx={R} />
+      </g>
       <Lid cx={L} side="L" inner={30} outer={8} />
       <Lid cx={R} side="R" inner={30} outer={8} />
+      <Mouth kind="grr" talking={talking} />
     </g>
   ),
-  sorprendido: () => (
-    <g className="blink">
-      <circle className="eye" cx={L} cy={Y} r="30" />
-      <circle className="eye" cx={R} cy={Y} r="30" />
-      <circle className="pupil" cx={L} cy={Y} r="9" />
-      <circle className="pupil" cx={R} cy={Y} r="9" />
+  sorprendido: (style, talking) => (
+    <g>
+      <g className="blink">
+        <circle className="eye" cx={L} cy={Y} r="28" />
+        <circle className="eye" cx={R} cy={Y} r="28" />
+        <circle className="pupil" cx={L} cy={Y} r="9" />
+        <circle className="pupil" cx={R} cy={Y} r="9" />
+      </g>
+      <Mouth kind="o" talking={talking} />
     </g>
   ),
   pensando: () => (
@@ -211,16 +251,56 @@ const FACES = {
       <path className="eye-line" d="M100 140 q5 -6 10 0 t10 0 t10 0 t10 0" />
     </g>
   ),
-  amor: () => (
-    <g className="beat">
-      <Heart cx={L} />
-      <Heart cx={R} />
+  amor: (style, talking) => (
+    <g>
+      <g className="beat">
+        <Heart cx={L} />
+        <Heart cx={R} />
+      </g>
+      <Mouth kind="sonrisita" talking={talking} />
     </g>
   ),
-  curioso: () => (
-    <g className="blink">
-      <Eye cx={L} w={34} h={42} dy={6} />
-      <Eye cx={R} w={46} h={64} dy={-2} />
+  curioso: (style, talking) => (
+    <g>
+      <g className="blink">
+        <Eye cx={L} w={34} h={42} dy={6} />
+        <Eye cx={R} w={46} h={64} dy={-2} />
+      </g>
+      <Mouth kind="picara" talking={talking} />
+    </g>
+  ),
+  // ---- caras nuevas
+  asustado: (style, talking) => (
+    <g className="tremble">
+      <circle className="eye" cx={L} cy={Y - 4} r="26" />
+      <circle className="eye" cx={R} cy={Y - 4} r="26" />
+      <circle className="pupil" cx={L} cy={Y - 4} r="5" />
+      <circle className="pupil" cx={R} cy={Y - 4} r="5" />
+      <Mouth kind="ondulada" talking={talking} />
+    </g>
+  ),
+  picaro: (style, talking) => (
+    <g>
+      <path className="eye-line" d={`M ${L - 20} ${Y + 2} Q ${L} ${Y - 12} ${L + 20} ${Y + 2}`} />
+      <g className="blink">
+        <Eye cx={R} />
+      </g>
+      <Mouth kind="picara" talking={talking} />
+    </g>
+  ),
+  aburrido: (style, talking) => (
+    <g>
+      <Eye cx={L} dy={4} />
+      <Eye cx={R} dy={4} />
+      <polygon className="lid" points={`${L - 40},0 ${R + 40},0 ${R + 40},${Y} ${L - 40},${Y}`} />
+      <Mouth kind="recta" talking={talking} />
+    </g>
+  ),
+  riendo: (style, talking) => (
+    <g className="bounce">
+      <path className="eye-line" d={`M ${L - 18} ${Y - 12} L ${L + 10} ${Y} L ${L - 18} ${Y + 12}`} />
+      <path className="eye-line" d={`M ${R + 18} ${Y - 12} L ${R - 10} ${Y} L ${R + 18} ${Y + 12}`} />
+      <Mouth kind="carcajada" talking={talking} />
     </g>
   ),
 };
@@ -237,6 +317,10 @@ export const EMOTION_LABELS = {
   curioso: 'Curioso',
   escuchando: 'Escuchando',
   mareado: 'Mareado',
+  asustado: 'Asustado',
+  picaro: 'Pícaro',
+  aburrido: 'Aburrido',
+  riendo: 'Riendo',
 };
 
 // Acciones de "vida propia": lo que hace solo cuando está en neutral y nadie le da bola.
@@ -355,6 +439,61 @@ export const IDLE_ACTIONS = {
       </g>
     ),
   },
+  lengua: {
+    ms: 2600,
+    modes: ['tierno'],
+    render: () => (
+      <g>
+        <path className="eye-line" d={`M ${L - 20} ${Y + 6} Q ${L} ${Y - 20} ${L + 20} ${Y + 6}`} />
+        <g className="blink">
+          <Eye cx={R} w={36} h={48} />
+        </g>
+        <Mouth kind="lengua" />
+      </g>
+    ),
+  },
+  silbar: {
+    ms: 3800,
+    modes: ['tierno'],
+    render: () => (
+      <g>
+        <g className="look-up">
+          <Eye cx={L} w={36} h={44} dx={-8} dy={-8} />
+          <Eye cx={R} w={36} h={44} dx={-8} dy={-8} />
+        </g>
+        <ellipse className="mouth" cx="132" cy="146" rx="6" ry="7" />
+        <text className="note" x={150} y={140}>♪</text>
+        <text className="note note-2" x={166} y={124}>♫</text>
+      </g>
+    ),
+  },
+  sonrisaMacabra: {
+    ms: 4000,
+    modes: ['terror'],
+    render: () => (
+      <g>
+        <TerrorEyes />
+        <g className="grin">
+          <path className="mouth-line thin" d="M60 128 Q120 168 180 128" />
+          {[78, 96, 114, 132, 150, 166].map((x, i) => (
+            <path key={x} className="mouth-line stitch" d={`M${x} ${136 + [2, 9, 12, 12, 9, 2][i] - 7} l0 14`} />
+          ))}
+        </g>
+      </g>
+    ),
+  },
+  mordisco: {
+    ms: 3000,
+    modes: ['terror'],
+    render: () => (
+      <g>
+        <TerrorEyes className="" />
+        <g className="chomp">
+          <Fangs />
+        </g>
+      </g>
+    ),
+  },
   risa: {
     ms: 3600,
     modes: ['terror'],
@@ -447,7 +586,7 @@ export function actionMs(action) {
   return IDLE_ACTIONS[String(action).split(':')[0]]?.ms ?? 3000;
 }
 
-function renderLayer({ emotion, action, faceStyle, photo, clipId }) {
+function renderLayer({ emotion, action, faceStyle, photo, clipId, talking }) {
   if (photo) {
     return (
       <image href={photo} x="0" y="0" width="240" height="180" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
@@ -456,14 +595,14 @@ function renderLayer({ emotion, action, faceStyle, photo, clipId }) {
   const [name, param] = action ? String(action).split(':') : [];
   const idle = name && IDLE_ACTIONS[name];
   if (idle) return idle.render(faceStyle, param);
-  return (FACES[emotion] || FACES.neutral)(faceStyle);
+  return (FACES[emotion] || FACES.neutral)(faceStyle, talking);
 }
 
 /**
  * Cara con fundido cruzado: cuando cambia la emoción, la acción o el estilo, la cara anterior
  * se desvanece mientras aparece la nueva (en vez de cambiar de golpe).
  */
-export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno', photo = null, children }) {
+export default function Face({ emotion = 'neutral', action = null, size = 320, onPet, eyeColor, faceStyle = 'tierno', photo = null, talking = false, children }) {
   const clipId = `face-clip-${useId().replace(/:/g, '')}`;
   const key = photo ? `photo-${photo}` : `${faceStyle}-${action ? `idle-${action}` : emotion}`;
   const [layers, setLayers] = useState(() => [{ key, emotion, action, faceStyle, photo, leaving: false }]);
@@ -501,7 +640,7 @@ export default function Face({ emotion = 'neutral', action = null, size = 320, o
           ? children /* un juego dibuja su propia pantalla */
           : layers.map((l) => (
               <g key={l.key} className={l.leaving ? 'face-leave' : 'face-enter'}>
-                {renderLayer({ ...l, clipId })}
+                {renderLayer({ ...l, clipId, talking: talking && !l.leaving })}
               </g>
             ))}
       </svg>

@@ -1261,3 +1261,50 @@ label {
   .head-gesture { transition: none; animation: none !important; }
 }
 .gestures { margin-top: 6px; }
+
+/* ---------- Bocas ---------- */
+.mouth-line {
+  fill: none;
+  stroke: var(--eye);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mouth-line.thin { stroke-width: 4; }
+.mouth-line.stitch { stroke-width: 3; }
+.tongue { fill: #ff6b8a; }
+.mouth.talk {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: talk 0.28s ease-in-out infinite alternate;
+}
+@keyframes talk {
+  0% { transform: scale(0.9, 0.2); }
+  60% { transform: scale(1, 1); }
+  100% { transform: scale(0.8, 0.55); }
+}
+.tremble { animation: tremble 0.12s linear infinite alternate; }
+@keyframes tremble { from { transform: translateX(-1.5px); } to { transform: translateX(1.5px); } }
+.bounce { animation: bounce 0.35s ease-in-out infinite alternate; }
+@keyframes bounce { to { transform: translateY(-4px); } }
+.grin {
+  transform-origin: 120px 140px;
+  animation: grin 4s ease-in-out both;
+}
+@keyframes grin {
+  0% { transform: scaleX(0); opacity: 0; }
+  25%, 85% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1.05); opacity: 0; }
+}
+.terror .grin { filter: drop-shadow(0 0 4px var(--eye)); }
+.chomp {
+  transform-origin: 120px 132px;
+  animation: chomp 0.5s ease-in-out 6 alternate both;
+}
+@keyframes chomp {
+  from { transform: scaleY(0.1); }
+  to { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mouth.talk, .tremble, .bounce, .grin, .chomp { animation: none; }
+}

@@ -80,17 +80,29 @@ export function speakSpooky(text) {
   window.speechSynthesis.speak(u);
 }
 
+// Avisa cuando empieza y termina de hablar (la cara mueve la boca mientras tanto)
+let talkId = 0;
+function setTalking(on) {
+  window.dispatchEvent(new CustomEvent('robot-talking', { detail: on }));
+}
+
 /** Dice el texto en voz alta. Devuelve una promesa que termina cuando deja de hablar. */
 export async function speak(text, { serverVoice = false } = {}) {
   stopSpeaking();
-  if (serverVoice) {
-    try {
-      return await speakServer(text);
-    } catch {
-      /* si falla la voz del servidor, sigue con la del navegador */
+  const id = ++talkId;
+  setTalking(true);
+  try {
+    if (serverVoice) {
+      try {
+        return await speakServer(text);
+      } catch {
+        /* si falla la voz del servidor, sigue con la del navegador */
+      }
     }
+    return await speakBrowser(text);
+  } finally {
+    if (id === talkId) setTalking(false);
   }
-  return speakBrowser(text);
 }
 
 /**

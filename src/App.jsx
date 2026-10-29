@@ -118,6 +118,12 @@ export default function App() {
     night,
   });
   const action = forced || idleAction;
+  const [talking, setTalking] = useState(false);
+  useEffect(() => {
+    const on = (e) => setTalking(Boolean(e.detail));
+    window.addEventListener('robot-talking', on);
+    return () => window.removeEventListener('robot-talking', on);
+  }, []);
   const head = useHead({ emotion, idle: life && emotion === 'neutral' && !action && !photo, faceStyle: look.faceStyle });
 
   // Toda interacción cuenta como actividad: corta la acción en curso y lo despierta
@@ -468,7 +474,7 @@ export default function App() {
             <>
             <div className="head" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }}>
               <div className={`head-gesture ${head.gesture ? `g-${head.gesture}` : ''}`}>
-                <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} />
+                <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} talking={talking && !action} />
               </div>
             </div>
             <div className="expressions" role="group" aria-label="Expresiones">

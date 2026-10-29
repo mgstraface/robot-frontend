@@ -66,18 +66,44 @@ function speakBrowser(text) {
   });
 }
 
+// Un solo elemento de audio reutilizado: en iPhone, una vez "desbloqueado" con un toque, puede sonar después
+// aunque el audio llegue unos segundos más tarde (si no, Safari lo bloquea).
+const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+let player = null;
+function getPlayer() {
+  if (!player && typeof Audio !== 'undefined') player = new Audio();
+  return player;
+}
+
+/** Llamar en el momento del toque (antes de esperar nada) para que el audio pueda sonar en iPhone. */
+export function unlockAudio() {
+  const p = getPlayer();
+  if (!p || p.dataset?.unlocked) return;
+  p.src = SILENCIO;
+  p.play()
+    .then(() => {
+      p.dataset.unlocked = '1';
+    })
+    .catch(() => {});
+}
+
 async function speakServer(text) {
+  const p = getPlayer();
+  unlockAudio();
   const blob = await api.tts(forSpeech(text));
   const url = URL.createObjectURL(blob);
-  const audio = new Audio(url);
-  currentAudio = audio;
-  await new Promise((resolve) => {
-    audio.onended = resolve;
-    audio.onerror = resolve;
-    audio.play().catch(resolve);
-  });
-  URL.revokeObjectURL(url);
-  if (currentAudio === audio) currentAudio = null;
+  p.src = url;
+  currentAudio = p;
+  try {
+    await new Promise((resolve, reject) => {
+      p.onended = resolve;
+      p.onerror = () => reject(new Error('No se pudo reproducir el audio'));
+      p.play().catch(reject);
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+    if (currentAudio === p) currentAudio = null;
+  }
 }
 
 /** Voz grave y lenta para las risas y sonidos de la vida propia en modo terror. */
@@ -150,4 +176,15 @@ export function listen() {
   });
   rec.start();
   return { promise, stop: () => rec.stop() };
+}
+
+// Desbloquea el audio con el primer toque en cualquier parte del panel
+if (typeof window !== 'undefined') {
+  const once = () => {
+    unlockAudio();
+    window.removeEventListener('pointerdown', once);
+    window.removeEventListener('touchend', once);
+  };
+  window.addEventListener('pointerdown', once);
+  window.addEventListener('touchend', once);
 }

@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 // Cara del robot dibujada en SVG. Sirve de simulador en el panel y de referencia
-// para dibujar las mismas expresiones en la pantalla del ESP32 (240×180 aprox.).
+// para dibujar las mismas expresiones en la pantalla del ESP32. La pantalla real es de 320×172 (apaisada):
+// el dibujo se hace en coordenadas 240×180 centradas, y la pantalla visible va de x=-40 a 280 y de y=4 a 176.
 
 const L = 78; // centro ojo izquierdo
 const R = 162; // centro ojo derecho
@@ -555,11 +556,11 @@ export const IDLE_ACTIONS = {
     render: () => (
       <g>
         <clipPath id="gol-clip">
-          <rect x="0" y="0" width="240" height="180" rx="36" />
+          <rect x="-40" y="4" width="320" height="172" rx="30" />
         </clipPath>
         <g className="stripes" clipPath="url(#gol-clip)">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <rect key={i} x={i * 40} y="0" width="20" height="180" className="stripe-red" />
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <rect key={i} x={i * 40 - 40} y="0" width="20" height="180" className="stripe-red" />
           ))}
         </g>
         <g className="bounce">
@@ -624,7 +625,7 @@ export function actionMs(action) {
 function renderLayer({ emotion, action, faceStyle, photo, clipId, talking }) {
   if (photo) {
     return (
-      <image href={photo} x="0" y="0" width="240" height="180" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
+      <image href={photo} x="-40" y="4" width="320" height="172" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
     );
   }
   const [name, param] = action ? String(action).split(':') : [];
@@ -661,16 +662,16 @@ export default function Face({ emotion = 'neutral', action = null, size = 320, o
       <svg
         className={`face ${faceStyle === 'terror' ? 'terror' : ''}`}
         style={eyeColor ? { '--eye': eyeColor } : undefined}
-        viewBox="0 0 240 180"
+        viewBox="-40 4 320 172"
         role="img"
         aria-label={`Cara: ${EMOTION_LABELS[emotion] || emotion}`}
       >
         <defs>
           <clipPath id={clipId}>
-            <rect x="0" y="0" width="240" height="180" rx="36" />
+            <rect x="-40" y="4" width="320" height="172" rx="30" />
           </clipPath>
         </defs>
-        <rect className="screen" x="0" y="0" width="240" height="180" rx="36" />
+        <rect className="screen" x="-40" y="4" width="320" height="172" rx="30" />
         {children
           ? children /* un juego dibuja su propia pantalla */
           : layers.map((l) => (

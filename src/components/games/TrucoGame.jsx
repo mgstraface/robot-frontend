@@ -151,7 +151,7 @@ export default function TrucoGame({ eyeColor, faceStyle, onExit }) {
           <text className="truco-title" x="60" y="22" textAnchor="middle">NOS</text>
           <text className="truco-title" x="180" y="22" textAnchor="middle">ELLOS</text>
           <line className="truco-sep" x1="120" y1="10" x2="120" y2="170" />
-          {st.meta === 30 && <line className="truco-sep" x1="24" y1="98" x2="216" y2="98" />}
+          {st.meta === 30 && <line className="truco-sep" x1="-10" y1="98" x2="250" y2="98" />}
           <Column x={52} points={st.nos} meta={st.meta} />
           <Column x={172} points={st.ellos} meta={st.meta} />
           {pop && (
@@ -164,8 +164,8 @@ export default function TrucoGame({ eyeColor, faceStyle, onExit }) {
               {msg}
             </text>
           )}
-          {zone('nos', 0, 110)}
-          {zone('ellos', 130, 110)}
+          {zone('nos', -40, 150)}
+          {zone('ellos', 130, 150)}
           {zone('centro', 110, 20)}
         </g>
       </Face>

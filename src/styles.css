@@ -1308,3 +1308,33 @@ label {
 @media (prefers-reduced-motion: reduce) {
   .mouth.talk, .tremble, .bounce, .grin, .chomp { animation: none; }
 }
+
+/* ---------- Newell's ---------- */
+.stripe-red { fill: #d71920; }
+.stripes { animation: stripes-in 5s ease-in-out both; }
+@keyframes stripes-in {
+  0% { opacity: 0; transform: translateX(-40px); }
+  15%, 85% { opacity: 0.9; transform: translateX(0); }
+  100% { opacity: 0; }
+}
+.gol-text {
+  fill: #fff;
+  font: 900 34px 'Space Grotesk', sans-serif;
+  letter-spacing: 1px;
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 5px;
+}
+.flag-red { fill: #d71920; }
+.flag-black { fill: #000; stroke: #333; stroke-width: 1; }
+.flag {
+  transform-origin: 40px 90px;
+  animation: flag-wave 0.9s ease-in-out infinite alternate;
+}
+@keyframes flag-wave {
+  from { transform: skewY(-4deg) scaleX(0.96); }
+  to { transform: skewY(4deg) scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stripes, .flag { animation: none; }
+}

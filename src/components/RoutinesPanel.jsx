@@ -44,7 +44,7 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
   };
 
   const changed = {};
-  for (const k of ['ownerName', 'sleepFrom', 'sleepTo', 'morningGreeting', 'scaresPerDay', 'waterEveryMin', 'meetingNoticeMin', 'deployReactions', 'timezone']) {
+  for (const k of ['ownerName', 'sleepFrom', 'sleepTo', 'morningGreeting', 'scaresPerDay', 'waterEveryMin', 'meetingNoticeMin', 'deployReactions', 'futbol', 'timezone']) {
     if (form[k] !== saved[k]) changed[k] = form[k];
   }
   if (form.city.name !== saved.city.name || form.city.lat !== saved.city.lat) changed.city = form.city;
@@ -249,6 +249,12 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
       <label className="check">
         <input type="checkbox" checked={form.deployReactions} onChange={(e) => set({ deployReactions: e.target.checked })} />
         Festejar o llorar según cómo salen los deploys
+      </label>
+
+      <h3>Newell's</h3>
+      <label className="check">
+        <input type="checkbox" checked={form.futbol !== false} onChange={(e) => set({ futbol: e.target.checked })} />
+        Hincha de la Lepra: avisa los partidos, festeja los goles y chicanea cuando pierde Central
       </label>
 
       <div className="row">

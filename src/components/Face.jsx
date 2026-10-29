@@ -548,6 +548,41 @@ export const IDLE_ACTIONS = {
       </g>
     ),
   },
+  // Newell's: festejo de gol y bandera rojinegra (las dispara el seguimiento de partidos o el panel)
+  gol: {
+    ms: 5000,
+    manual: true,
+    render: () => (
+      <g>
+        <clipPath id="gol-clip">
+          <rect x="0" y="0" width="240" height="180" rx="36" />
+        </clipPath>
+        <g className="stripes" clipPath="url(#gol-clip)">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <rect key={i} x={i * 40} y="0" width="20" height="180" className="stripe-red" />
+          ))}
+        </g>
+        <g className="bounce">
+          <path className="eye-line" d={`M ${L - 18} ${Y - 30} L ${L + 10} ${Y - 18} L ${L - 18} ${Y - 6}`} />
+          <path className="eye-line" d={`M ${R + 18} ${Y - 30} L ${R - 10} ${Y - 18} L ${R + 18} ${Y - 6}`} />
+          <text className="gol-text" x="120" y="150" textAnchor="middle">GOOOL</text>
+        </g>
+      </g>
+    ),
+  },
+  bandera: {
+    ms: 4500,
+    manual: true,
+    render: () => (
+      <g>
+        <g className="flag">
+          <rect x="40" y="40" width="80" height="100" className="flag-red" />
+          <rect x="120" y="40" width="80" height="100" className="flag-black" />
+        </g>
+        <path className="mouth-line" d="M100 158 Q120 170 140 158" />
+      </g>
+    ),
+  },
   // Clima animado (lo dispara el saludo o el panel; no es parte de la vida propia al azar)
   clima: {
     ms: 5200,

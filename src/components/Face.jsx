@@ -91,6 +91,17 @@ const MOUTHS = {
   ),
 };
 
+/** Estrella de 5 puntas centrada en (cx, cy). */
+function star(cx, cy, r1, r2) {
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? r2 : r1;
+    const a = (Math.PI / 5) * i - Math.PI / 2;
+    pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`);
+  }
+  return `M${pts.join('L')}Z`;
+}
+
 function Mouth({ kind, talking }) {
   if (talking) return <ellipse className="mouth talk" cx="120" cy="146" rx="12" ry="9" />;
   return kind ? MOUTHS[kind] : null;
@@ -304,6 +315,64 @@ const FACES = {
       <Mouth kind="carcajada" talking={talking} />
     </g>
   ),
+  llorando: (style, talking) => (
+    <g>
+      <path className="eye-line" d={`M ${L - 20} ${Y} Q ${L} ${Y - 14} ${L + 20} ${Y}`} />
+      <path className="eye-line" d={`M ${R - 20} ${Y} Q ${R} ${Y - 14} ${R + 20} ${Y}`} />
+      <path className="tear-stream" d={`M ${L - 6} ${Y + 6} q -4 30 2 70`} />
+      <path className="tear-stream tear-2" d={`M ${R + 6} ${Y + 6} q 4 30 -2 70`} />
+      <Mouth kind="ondulada" talking={talking} />
+    </g>
+  ),
+  confundido: (style, talking) => (
+    <g>
+      <g className="blink">
+        <Eye cx={L} w={30} h={30} dy={6} />
+        <Eye cx={R} w={42} h={58} dy={-4} />
+      </g>
+      <path className="eye-line thin-line" d={`M ${R - 18} ${Y - 46} L ${R + 20} ${Y - 38}`} />
+      <text className="qmark" x={R + 46} y={Y - 26}>?</text>
+      <Mouth kind="ondulada" talking={talking} />
+    </g>
+  ),
+  emocionado: (style, talking) => (
+    <g>
+      <g className="twinkle">
+        <path className="eye" d={star(L, Y, 28, 12)} />
+        <path className="eye" d={star(R, Y, 28, 12)} />
+      </g>
+      <Mouth kind="carcajada" talking={talking} />
+    </g>
+  ),
+  avergonzado: (style, talking) => (
+    <g>
+      <g className="blink">
+        <Eye cx={L} w={34} h={30} dy={14} dx={-4} />
+        <Eye cx={R} w={34} h={30} dy={14} dx={-4} />
+      </g>
+      <ellipse className="cheek blush" cx={L - 6} cy={Y + 38} rx="18" ry="8" />
+      <ellipse className="cheek blush" cx={R + 6} cy={Y + 38} rx="18" ry="8" />
+      <Mouth kind="sonrisita" talking={talking} />
+    </g>
+  ),
+  nervioso: (style, talking) => (
+    <g className="tremble">
+      <g className="blink">
+        <Eye cx={L} w={36} h={46} />
+        <Eye cx={R} w={36} h={46} />
+      </g>
+      <path className="sweat" d={`M ${R + 46} ${Y - 40} q 8 14 0 20 q -8 -6 0 -20 z`} />
+      <Mouth kind="grr" talking={talking} />
+    </g>
+  ),
+  muerto: (style, talking) => (
+    <g>
+      <path className="eye-line" d={`M ${L - 16} ${Y - 16} L ${L + 16} ${Y + 16} M ${L + 16} ${Y - 16} L ${L - 16} ${Y + 16}`} />
+      <path className="eye-line" d={`M ${R - 16} ${Y - 16} L ${R + 16} ${Y + 16} M ${R + 16} ${Y - 16} L ${R - 16} ${Y + 16}`} />
+      {talking ? <Mouth talking /> : <path className="tongue" d="M128 140 L142 140 L142 154 Q135 164 128 154 Z" />}
+      {!talking && <path className="mouth-line" d="M104 142 L146 140" />}
+    </g>
+  ),
 };
 
 export const EMOTION_LABELS = {
@@ -322,6 +391,12 @@ export const EMOTION_LABELS = {
   picaro: 'Pícaro',
   aburrido: 'Aburrido',
   riendo: 'Riendo',
+  llorando: 'Llorando',
+  confundido: 'Confundido',
+  emocionado: 'Emocionado',
+  avergonzado: 'Avergonzado',
+  nervioso: 'Nervioso',
+  muerto: 'Muerto',
 };
 
 // Acciones de "vida propia": lo que hace solo cuando está en neutral y nadie le da bola.

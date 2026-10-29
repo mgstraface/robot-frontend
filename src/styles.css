@@ -1358,3 +1358,14 @@ label {
 .truco-pop { fill: #fff; font: 800 22px 'Space Grotesk', sans-serif; animation: note-float 0.7s ease-out forwards; }
 .truco-msg { fill: var(--eye); font: 700 12px 'Space Grotesk', sans-serif; }
 .pill.halloween { background: #ff7a1a; color: #1a0d00; border-color: #ff7a1a; }
+
+/* ---------- Caras nuevas (2) ---------- */
+.tear-stream { fill: none; stroke: #7cc7ff; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 8 10; animation: tear-run 0.6s linear infinite; }
+.tear-2 { animation-delay: 0.3s; }
+@keyframes tear-run { to { stroke-dashoffset: -18; } }
+.thin-line { stroke-width: 5; }
+.qmark { fill: var(--eye); font: 800 30px 'Space Grotesk', sans-serif; animation: float 1.6s ease-in-out infinite; }
+.twinkle { transform-box: fill-box; transform-origin: center; animation: beat 0.7s ease-in-out infinite; }
+.blush { opacity: 0.85; }
+.sweat { fill: #7cc7ff; animation: float 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tear-stream, .qmark, .twinkle, .sweat { animation: none; } }

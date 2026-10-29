@@ -43,6 +43,12 @@ export const POSTURES = {
   picaro: { pan: 12, tilt: -4 },
   aburrido: { pan: 0, tilt: -12 },
   riendo: { pan: 0, tilt: 15 },
+  llorando: { pan: 0, tilt: -18 },
+  confundido: { pan: 18, tilt: 6 },
+  emocionado: { pan: 0, tilt: 16 },
+  avergonzado: { pan: -20, tilt: -14 },
+  nervioso: { pan: -8, tilt: -4 },
+  muerto: { pan: 10, tilt: -25 },
 };
 
 const clamp = (v, m) => Math.max(-m, Math.min(m, v));

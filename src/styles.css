@@ -1346,3 +1346,11 @@ label {
 .tateti-x { stroke: #fff; stroke-width: 6; stroke-linecap: round; fill: none; }
 .tateti-o { stroke: var(--eye); stroke-width: 6; fill: none; filter: drop-shadow(0 0 4px var(--eye)); animation: pop 0.3s ease-out; }
 .tateti-win { stroke: #ff5577; stroke-width: 6; stroke-linecap: round; animation: pop 0.4s ease-out; }
+
+/* ---------- Anotador de truco ---------- */
+.fosforo { stroke: #f3e2b8; stroke-width: 3; stroke-linecap: round; animation: pop 0.25s ease-out; }
+.truco-title { fill: var(--eye); font: 700 13px 'Space Grotesk', sans-serif; letter-spacing: 2px; }
+.truco-sep { stroke: var(--eye); stroke-width: 1.5; opacity: 0.35; stroke-dasharray: 4 4; }
+.truco-controls { flex-direction: column; align-items: center; gap: 0.5rem; }
+.truco-team { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; justify-content: center; }
+.truco-team strong { min-width: 3.2rem; text-align: right; }

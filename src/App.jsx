@@ -11,6 +11,7 @@ import RoutinesPanel from './components/RoutinesPanel.jsx';
 import PhotosPanel from './components/PhotosPanel.jsx';
 import GamesPanel from './components/GamesPanel.jsx';
 import TatetiGame from './components/games/TatetiGame.jsx';
+import TrucoGame from './components/games/TrucoGame.jsx';
 import { GESTURE_LABELS, useHead } from './head.js';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
@@ -33,6 +34,10 @@ const TRIES = [
   { id: 'deploy-falla', label: 'Deploy falló' },
   { id: 'foco-fin', label: 'Fin de foco' },
   { id: 'gol', label: 'Gol de Newell\'s' },
+  { id: 'gol-rival', label: 'Gol de Central' },
+  { id: 'victoria', label: 'Ganó Newell\'s' },
+  { id: 'derrota', label: 'Perdió Newell\'s' },
+  { id: 'central-perdio', label: 'Perdió Central' },
 ];
 const TRIVIA_PROMPT =
   '¡Juguemos a una trivia de películas de terror! Haceme una pregunta por vez con tres opciones, esperá mi respuesta, decime si acerté y llevá la cuenta.';
@@ -472,6 +477,7 @@ export default function App() {
         <div className="col">
           <section className="card stage">
             {game === 'ppt' && <PptGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
+            {game === 'truco' && <TrucoGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {game === 'tateti' && <TatetiGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {game === 'ojo' && <CatchGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {!game && (

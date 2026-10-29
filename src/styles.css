@@ -1338,3 +1338,11 @@ label {
 @media (prefers-reduced-motion: reduce) {
   .stripes, .flag { animation: none; }
 }
+
+/* ---------- Ta-te-ti ---------- */
+.tateti-grid { stroke: var(--eye); stroke-width: 3; stroke-linecap: round; opacity: 0.55; }
+.tateti-cell { fill: transparent; cursor: pointer; }
+.tateti-cell:hover { fill: rgba(255, 255, 255, 0.06); }
+.tateti-x { stroke: #fff; stroke-width: 6; stroke-linecap: round; fill: none; }
+.tateti-o { stroke: var(--eye); stroke-width: 6; fill: none; filter: drop-shadow(0 0 4px var(--eye)); animation: pop 0.3s ease-out; }
+.tateti-win { stroke: #ff5577; stroke-width: 6; stroke-linecap: round; animation: pop 0.4s ease-out; }

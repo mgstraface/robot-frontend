@@ -10,6 +10,7 @@ import PersonalityPanel from './components/PersonalityPanel.jsx';
 import RoutinesPanel from './components/RoutinesPanel.jsx';
 import PhotosPanel from './components/PhotosPanel.jsx';
 import GamesPanel from './components/GamesPanel.jsx';
+import TatetiGame from './components/games/TatetiGame.jsx';
 import { GESTURE_LABELS, useHead } from './head.js';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
@@ -471,6 +472,7 @@ export default function App() {
         <div className="col">
           <section className="card stage">
             {game === 'ppt' && <PptGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
+            {game === 'tateti' && <TatetiGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {game === 'ojo' && <CatchGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {!game && (
             <>

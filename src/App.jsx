@@ -34,6 +34,7 @@ const TRIES = [
   { id: 'deploy-falla', label: 'Deploy falló' },
   { id: 'foco-fin', label: 'Fin de foco' },
   { id: 'gol', label: 'Gol de Newell\'s' },
+  { id: 'frase', label: 'Frase leprosa' },
   { id: 'gol-rival', label: 'Gol de Central' },
   { id: 'victoria', label: 'Ganó Newell\'s' },
   { id: 'derrota', label: 'Perdió Newell\'s' },

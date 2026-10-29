@@ -44,9 +44,11 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
   };
 
   const changed = {};
-  for (const k of ['ownerName', 'sleepFrom', 'sleepTo', 'morningGreeting', 'scaresPerDay', 'waterEveryMin', 'meetingNoticeMin', 'deployReactions', 'futbol', 'timezone']) {
+  for (const k of ['ownerName', 'sleepFrom', 'sleepTo', 'morningGreeting', 'scaresPerDay', 'waterEveryMin', 'meetingNoticeMin', 'deployReactions', 'futbol', 'frasesCadaHoras', 'timezone']) {
     if (form[k] !== saved[k]) changed[k] = form[k];
   }
+  const frasesText = (form.frasesLeprosas || []).join('\n');
+  if (frasesText !== (saved.frasesLeprosas || []).join('\n')) changed.frasesLeprosas = form.frasesLeprosas;
   if (form.city.name !== saved.city.name || form.city.lat !== saved.city.lat) changed.city = form.city;
   if (calendarUrl.trim()) changed.calendarUrl = calendarUrl.trim();
   const dirty = Object.keys(changed).length > 0;
@@ -256,6 +258,26 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
         <input type="checkbox" checked={form.futbol !== false} onChange={(e) => set({ futbol: e.target.checked })} />
         Hincha de la Lepra: avisa los partidos, festeja los goles y chicanea cuando pierde Central
       </label>
+      {form.futbol !== false && (
+        <>
+          <label htmlFor="frases-cada">Frases leprosas</label>
+          <select id="frases-cada" value={form.frasesCadaHoras ?? 3} onChange={(e) => set({ frasesCadaHoras: Number(e.target.value) })}>
+            <option value={0}>Nunca</option>
+            <option value={1}>Cada hora, más o menos</option>
+            <option value={3}>Cada 3 horas, más o menos</option>
+            <option value={6}>Cada 6 horas, más o menos</option>
+          </select>
+          <label htmlFor="frases">Tus frases y cantitos (una por línea)</label>
+          <textarea
+            id="frases"
+            rows={5}
+            value={frasesText}
+            placeholder="Si lo dejás vacío usa las de fábrica. Podés escribir tus cantitos de la cancha."
+            onChange={(e) => set({ frasesLeprosas: e.target.value.split('\n').slice(0, 50) })}
+          />
+          <p className="hint">También se las podés pedir: "Robi, cantá algo de Newell's".</p>
+        </>
+      )}
 
       <div className="row">
         <button type="button" onClick={save} disabled={!dirty || busy === 'save'}>

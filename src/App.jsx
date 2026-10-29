@@ -10,6 +10,7 @@ import PersonalityPanel from './components/PersonalityPanel.jsx';
 import RoutinesPanel from './components/RoutinesPanel.jsx';
 import PhotosPanel from './components/PhotosPanel.jsx';
 import GamesPanel from './components/GamesPanel.jsx';
+import { GESTURE_LABELS, useHead } from './head.js';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
 import { photoUrl } from './photos.js';
@@ -33,6 +34,9 @@ const TRIES = [
 ];
 const TRIVIA_PROMPT =
   '¡Juguemos a una trivia de películas de terror! Haceme una pregunta por vez con tres opciones, esperá mi respuesta, decime si acerté y llevá la cuenta.';
+
+const SINO_PROMPT =
+  'Juguemos a "sí o no": yo te hago preguntas y vos respondés como una bola 8 mágica, misterioso y en una sola frase corta, siempre moviendo la cabeza (asentir o negar). Arrancá diciendo que estás listo.';
 
 const KIND_LABELS = { saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
 
@@ -114,6 +118,7 @@ export default function App() {
     night,
   });
   const action = forced || idleAction;
+  const head = useHead({ emotion, idle: life && emotion === 'neutral' && !action && !photo, faceStyle: look.faceStyle });
 
   // Toda interacción cuenta como actividad: corta la acción en curso y lo despierta
   const changeEmotion = useCallback(
@@ -376,8 +381,8 @@ export default function App() {
   }
 
   function playGame(id) {
-    if (id === 'trivia') {
-      setChatPrompt({ id: Date.now(), text: TRIVIA_PROMPT });
+    if (id === 'trivia' || id === 'sino') {
+      setChatPrompt({ id: Date.now(), text: id === 'trivia' ? TRIVIA_PROMPT : SINO_PROMPT });
       return;
     }
     setGame(id);
@@ -403,8 +408,24 @@ export default function App() {
     }
   }
 
-  function pet() {
+  function pet(e) {
     changeEmotion(action === 'dormir' ? 'sorprendido' : 'amor');
+    // mira hacia el lado donde lo tocaron (como las zonas táctiles del robot)
+    const r = e?.currentTarget?.getBoundingClientRect?.();
+    if (r && e.clientX) {
+      const side = ((e.clientX - r.left) / r.width - 0.5) * 2;
+      if (Math.abs(side) > 0.3) head.glance(side * 45, 5, 2000);
+    }
+  }
+
+  async function sendGesture(g) {
+    head.playGesture(g);
+    if (!robotId) return;
+    try {
+      await api.gesture(g);
+    } catch (err) {
+      onError(err);
+    }
   }
 
   async function sendExpression(e) {
@@ -445,7 +466,11 @@ export default function App() {
             {game === 'ojo' && <CatchGame eyeColor={look.eyeColor} faceStyle={look.faceStyle} onExit={exitGame} />}
             {!game && (
             <>
-            <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} />
+            <div className="head" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }}>
+              <div className={`head-gesture ${head.gesture ? `g-${head.gesture}` : ''}`}>
+                <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} />
+              </div>
+            </div>
             <div className="expressions" role="group" aria-label="Expresiones">
               {cfg.emotions.map((e) => (
                 <button
@@ -456,6 +481,13 @@ export default function App() {
                   title={robotId ? 'Mostrar en el panel y en el robot' : 'Vista previa (no hay robot conectado)'}
                 >
                   {EMOTION_LABELS[e] || e}
+                </button>
+              ))}
+            </div>
+            <div className="expressions gestures" role="group" aria-label="Movimientos de cabeza">
+              {Object.entries(GESTURE_LABELS).map(([g, label]) => (
+                <button key={g} type="button" className="chip" onClick={() => sendGesture(g)}>
+                  {label}
                 </button>
               ))}
             </div>
@@ -500,7 +532,7 @@ export default function App() {
             </>
             )}
           </section>
-          <ChatPanel onEmotion={changeEmotion} robotId={robotId} serverVoice={cfg.voice} onError={onError} prompt={chatPrompt} />
+          <ChatPanel onEmotion={changeEmotion} onGesture={head.playGesture} robotId={robotId} serverVoice={cfg.voice} onError={onError} prompt={chatPrompt} />
         </div>
 
         <section className="card side">

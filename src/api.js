@@ -56,6 +56,7 @@ export const api = {
   focus: () => request('/focus'),
   startFocus: (minutes) => request('/focus', { method: 'POST', body: { minutes } }),
   stopFocus: () => request('/focus', { method: 'DELETE' }),
+  gesture: (gesture) => request('/gesture', { method: 'POST', body: { gesture } }),
   action: (action, weather) => request('/action', { method: 'POST', body: { action, weather } }),
   photos: () => request('/photos'),
   photoBlob: async (id) => {

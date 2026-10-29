@@ -1,6 +1,7 @@
 const GAMES = [
   { id: 'ppt', title: 'Piedra, papel o tijera', text: 'Al mejor de los que quieras. En el robot, tocando la pantalla.' },
   { id: 'ojo', title: 'Atrapá el ojo', text: 'Aparece un ojo en cualquier lado: tocalo rápido. 20 segundos.' },
+  { id: 'sino', title: 'Sí o no', text: 'Preguntale lo que quieras: responde como bola 8 mágica, moviendo la cabeza.' },
   { id: 'trivia', title: 'Trivia de terror', text: 'Te hace preguntas de películas de terror con su personalidad.' },
 ];
 

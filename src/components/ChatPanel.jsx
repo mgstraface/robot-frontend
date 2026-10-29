@@ -13,7 +13,7 @@ function loadVoicePref() {
   }
 }
 
-export default function ChatPanel({ onEmotion, robotId, serverVoice, onError, prompt }) {
+export default function ChatPanel({ onEmotion, onGesture, robotId, serverVoice, onError, prompt }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -64,6 +64,7 @@ export default function ChatPanel({ onEmotion, robotId, serverVoice, onError, pr
       const reply = await api.chat(value, speakOnRobot && robotId ? robotId : undefined);
       setMessages((m) => [...m, { role: 'assistant', text: reply.text, emotion: reply.emotion }]);
       onEmotion(reply.emotion);
+      if (reply.gesture) onGesture?.(reply.gesture);
       if (pcVoice && (ttsSupported || serverVoice)) speak(reply.text, { serverVoice });
     } catch (err) {
       onEmotion('triste');

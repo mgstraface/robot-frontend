@@ -499,7 +499,7 @@ export const IDLE_ACTIONS = {
     ms: 3600,
     modes: ['terror'],
     // lo que dice en voz alta (si "Voz en la PC" está activada)
-    sound: 'je... je, je, je... ja, ja, ja',
+    sound: 'jejeje... jajajaja',
     render: () => (
       <g className="laugh">
         <g>

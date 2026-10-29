@@ -13,6 +13,19 @@ export const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' i
 const Recognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 export const sttSupported = Boolean(Recognition);
 
+/**
+ * Arregla el texto para que la voz lo lea bien:
+ * - palabras en MAYÚSCULAS (GOOOL) las deletrea → las pasa a minúsculas
+ * - más de 3 letras repetidas (goooooool) → 3
+ * - risas sueltas ("je, je, je") las lee como letras → "jejeje"
+ */
+export function forSpeech(text) {
+  return String(text || '')
+    .replace(/\b[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ']+\b/g, (w) => w.toLowerCase())
+    .replace(/([a-záéíóúñ])\1{3,}/gi, '$1$1$1')
+    .replace(/\b(j[aeiou])(?:[\s,.…]+\1)+\b/gi, (m, syl) => syl.toLowerCase().repeat(Math.min(4, m.split(/[\s,.…]+/).length)));
+}
+
 function pickVoice() {
   const voices = window.speechSynthesis.getVoices();
   return (
@@ -41,7 +54,7 @@ export function stopSpeaking() {
 function speakBrowser(text) {
   return new Promise((resolve) => {
     if (!ttsSupported) return resolve();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(forSpeech(text));
     const voice = pickVoice();
     if (voice) u.voice = voice;
     u.lang = voice?.lang || 'es-AR';
@@ -54,7 +67,7 @@ function speakBrowser(text) {
 }
 
 async function speakServer(text) {
-  const blob = await api.tts(text);
+  const blob = await api.tts(forSpeech(text));
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
   currentAudio = audio;
@@ -70,11 +83,11 @@ async function speakServer(text) {
 /** Voz grave y lenta para las risas y sonidos de la vida propia en modo terror. */
 export function speakSpooky(text) {
   if (!ttsSupported) return;
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(forSpeech(text));
   const voice = pickVoice();
   if (voice) u.voice = voice;
   u.lang = voice?.lang || 'es-AR';
-  u.pitch = 0.1;
+  u.pitch = 0.4; // muy grave (0.1) algunas voces lo distorsionan y no se entiende
   u.rate = 0.75;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);

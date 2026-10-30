@@ -16,7 +16,7 @@ import { ARM_LABELS, GESTURE_LABELS, useHead } from './head.js';
 import Body from './components/Body.jsx';
 import MoodBars from './components/MoodBars.jsx';
 import RobotPanel from './components/RobotPanel.jsx';
-import ScreenMenu, { MENU, Peek, Stopwatch } from './components/ScreenMenu.jsx';
+import ScreenMenu, { CocinaScreen, MENU, Peek, Stopwatch } from './components/ScreenMenu.jsx';
 import CocinaPanel from './components/CocinaPanel.jsx';
 import { useTouchGestures } from './useTouchGestures.js';
 import PptGame from './components/games/PptGame.jsx';
@@ -526,9 +526,23 @@ export default function App() {
       return setCrono({ since: Date.now(), acc: 0, running: true });
     }
     if (item.id === 'cocina') {
+      // las recetas guardadas aparecen en la misma pantalla, sin ir al panel
+      try {
+        const list = await api.recetas();
+        if (!list.length) {
+          setMenu(null);
+          return setPeek(['Sin recetas', 'Cargá la primera', 'en la pestaña Cocina']);
+        }
+        const items = [...list.map((r) => ({ id: 'receta', label: r.nombre, recetaId: r._id })), { id: 'volver', label: 'Volver' }];
+        return setMenu({ level: 'recetas', index: 0, items });
+      } catch (err) {
+        onError(err);
+        return setMenu(null);
+      }
+    }
+    if (item.id === 'receta') {
       setMenu(null);
-      if (cocina?.activa) return api.cocinaAccion('siguiente').then(setCocina).catch(onError);
-      return setPeek(['Cocina', 'Elegí una receta', 'en la pestaña Cocina']);
+      return api.cocinaStart(item.recetaId).then(setCocina).catch(onError);
     }
     if (item.id === 'volver') return setMenu({ level: 'main', index: 0 });
     setMenu(null);
@@ -557,10 +571,11 @@ export default function App() {
         return setCrono(crono.running ? { ...crono, running: false, acc: crono.acc + now - crono.since } : { ...crono, running: true, since: now });
       }
       if (peek) return setPeek(null);
-      if (menu) return runMenuItem(MENU[menu.level][menu.index]);
+      if (menu) return runMenuItem((menu.items || MENU[menu.level])[menu.index]);
       // cocinando, un toque pasa al paso siguiente (tenés las manos ocupadas)
       if (cocina?.activa) return api.cocinaAccion('siguiente').then(setCocina).catch(onError);
-      return pet(e);
+      // fuera de eso, un toque solo hace que te mire (el mimo de verdad son los sensores del robot)
+      return lookAtTouch(e);
     },
     onTripleTap: () => {
       if (menu || peek) return;
@@ -571,6 +586,11 @@ export default function App() {
     },
     onLongPress: () => {
       if (menu || peek) return;
+      if (cocina?.activa) {
+        api.cocinaAccion('stop').then(setCocina).catch(onError);
+        setPeek(['Listo', 'Receta terminada']);
+        return;
+      }
       changeEmotion('escuchando');
       setPeek(['Te escucho…', '(con el micrófono armado)']);
     },
@@ -582,12 +602,17 @@ export default function App() {
       }
       if (dir === 'arriba') return setMenu(null);
       if (dir === 'abajo') return menu ? setMenu(null) : showPeek();
-      const items = MENU[menu?.level || 'main'];
+      const items = menu?.items || MENU[menu?.level || 'main'];
       if (!menu) return setMenu({ level: 'main', index: 0 });
       const step = dir === 'izquierda' ? 1 : -1;
       return setMenu({ ...menu, index: (menu.index + step + items.length) % items.length });
     },
   });
+
+  function lookAtTouch(e) {
+    const r = e?.currentTarget?.getBoundingClientRect?.();
+    if (r && e.clientX) head.glance(((e.clientX - r.left) / r.width - 0.5) * 2 * 45, 5, 1500);
+  }
 
   function pet(e) {
     changeEmotion(action === 'dormir' ? 'sorprendido' : 'amor');
@@ -662,7 +687,11 @@ export default function App() {
                     </Face>
                   ) : menu ? (
                     <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
-                      <ScreenMenu level={menu.level} index={menu.index} />
+                      <ScreenMenu level={menu.level} index={menu.index} items={menu.items} />
+                    </Face>
+                  ) : cocina?.activa && !peek ? (
+                    <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
+                      <CocinaScreen cocina={cocina} now={Date.now()} />
                     </Face>
                   ) : peek ? (
                     <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
@@ -673,7 +702,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <TimerBadge cocina={cocina} timers={timers} />
+              {!cocina?.activa && <TimerBadge cocina={cocina} timers={timers} />}
               <Body pose={head.pose} gesture={head.gesture} emotion={emotion} eyeColor={look.eyeColor} />
             </div>
             <div className="expressions" role="group" aria-label="Expresiones">

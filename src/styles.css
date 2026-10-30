@@ -1489,3 +1489,6 @@ label {
 .recetas li { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.55rem 0.7rem; border-radius: 10px; background: var(--surface-2); }
 .recetas li div:first-child { display: grid; }
 .recetas small { color: var(--muted); }
+
+.cocina-line { fill: #fff; font: 600 15px 'Space Grotesk', sans-serif; }
+.cocina-timer { fill: #f2a541; font: 800 34px 'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums; }

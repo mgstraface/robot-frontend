@@ -82,6 +82,7 @@ function Icon({ id }) {
         </g>
       );
     case 'cocina':
+    case 'receta':
       return (
         <g>
           <path d="M92 66 h56 v18 a14 14 0 0 1 -14 14 h-28 a14 14 0 0 1 -14 -14 z M86 66 h68" />
@@ -130,13 +131,13 @@ function Icon({ id }) {
   }
 }
 
-export default function ScreenMenu({ level, index }) {
-  const items = MENU[level];
+export default function ScreenMenu({ level, index, items: custom }) {
+  const items = custom || MENU[level];
   const item = items[index];
   return (
     <g className="screen-menu">
       <text className="menu-crumb" x="-24" y="26">
-        {level === 'juegos' ? 'Menú › Juegos' : level === 'temporizador' ? 'Menú › Temporizador' : 'Menú'}
+        {{ juegos: 'Menú › Juegos', temporizador: 'Menú › Temporizador', recetas: 'Menú › Cocina' }[level] || 'Menú'}
       </text>
       <g className="menu-icon">
         <Icon id={item.id} />
@@ -182,6 +183,50 @@ export function Stopwatch({ ms, running }) {
       </text>
       <text x="120" y="140" textAnchor="middle" className="menu-hint">
         {running ? 'tocá para pausar · deslizá arriba para salir' : 'en pausa · tocá para seguir · deslizá arriba para salir'}
+      </text>
+    </g>
+  );
+}
+
+// corta un texto en renglones de ~n caracteres (SVG no hace saltos de línea solo)
+function wrap(text, n, max) {
+  const words = String(text).split(/\s+/);
+  const lines = [''];
+  for (const w of words) {
+    if ((lines[lines.length - 1] + ' ' + w).trim().length > n) lines.push(w);
+    else lines[lines.length - 1] = (lines[lines.length - 1] + ' ' + w).trim();
+  }
+  if (lines.length > max) {
+    lines.length = max;
+    lines[max - 1] += '…';
+  }
+  return lines;
+}
+
+/** Pantalla de cocina: el paso actual (o los ingredientes) y la cuenta regresiva más próxima. */
+export function CocinaScreen({ cocina, now }) {
+  const r = cocina.receta;
+  const paso = cocina.paso >= 0 ? r.pasos[cocina.paso] : null;
+  const timer = [...cocina.timers].sort((a, b) => a.endsAt - b.endsAt)[0];
+  const rest = timer ? Math.max(0, Math.round((timer.endsAt - now) / 1000)) : 0;
+  const lines = paso ? wrap(paso.texto, 30, 3) : wrap(`Ingredientes: ${r.ingredientes.join(', ')}`, 34, 4);
+  return (
+    <g className="screen-cocina">
+      <text className="menu-crumb" x="-24" y="26">
+        {paso ? `${r.nombre} · paso ${cocina.paso + 1} de ${r.pasos.length}` : r.nombre}
+      </text>
+      {lines.map((l, i) => (
+        <text key={i} x="120" y={(timer ? 58 : 72) + i * 22} textAnchor="middle" className="cocina-line">
+          {l}
+        </text>
+      ))}
+      {timer && (
+        <text x="120" y="150" textAnchor="middle" className="cocina-timer">
+          {`${Math.floor(rest / 60)}:${String(rest % 60).padStart(2, '0')}`}
+        </text>
+      )}
+      <text x="120" y="172" textAnchor="middle" className="menu-hint">
+        {paso ? 'tocá: siguiente paso · mantené: terminar' : 'tocá para arrancar · mantené: terminar'}
       </text>
     </g>
   );

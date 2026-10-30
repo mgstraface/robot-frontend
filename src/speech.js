@@ -49,6 +49,7 @@ export function stopSpeaking() {
     currentAudio = null;
   }
   if (ttsSupported) window.speechSynthesis.cancel();
+  setTalking(false);
 }
 
 function speakBrowser(text) {
@@ -60,8 +61,14 @@ function speakBrowser(text) {
     u.lang = voice?.lang || 'es-AR';
     u.pitch = 1.35; // un poco más agudo: suena más a mascota
     u.rate = 1.05;
-    u.onend = resolve;
-    u.onerror = resolve;
+    // Chrome a veces no avisa que terminó: corte de seguridad según el largo del texto
+    const safety = setTimeout(resolve, 2000 + String(text).length * 90);
+    const done = () => {
+      clearTimeout(safety);
+      resolve();
+    };
+    u.onend = done;
+    u.onerror = done;
     window.speechSynthesis.speak(u);
   });
 }
@@ -96,9 +103,22 @@ async function speakServer(text) {
   currentAudio = p;
   try {
     await new Promise((resolve, reject) => {
-      p.onended = resolve;
-      p.onerror = () => reject(new Error('No se pudo reproducir el audio'));
-      p.play().catch(reject);
+      // termina al llegar al final, si lo pausan (otro audio lo corta) o, por las dudas, a los 60 s
+      const safety = setTimeout(resolve, 60000);
+      const done = () => {
+        clearTimeout(safety);
+        resolve();
+      };
+      p.onended = done;
+      p.onpause = done;
+      p.onerror = () => {
+        clearTimeout(safety);
+        reject(new Error('No se pudo reproducir el audio'));
+      };
+      p.play().catch((err) => {
+        clearTimeout(safety);
+        reject(err);
+      });
     });
   } finally {
     URL.revokeObjectURL(url);

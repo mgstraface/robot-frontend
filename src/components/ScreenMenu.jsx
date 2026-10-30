@@ -4,11 +4,23 @@
 export const MENU = {
   main: [
     { id: 'juegos', label: 'Juegos' },
+    { id: 'cocina', label: 'Cocina' },
+    { id: 'temporizador', label: 'Temporizador' },
     { id: 'timer', label: 'Pomodoro 25 min' },
     { id: 'clima', label: 'Clima' },
     { id: 'fotos', label: 'Fotos' },
     { id: 'modo', label: 'Tierno / Terror' },
     { id: 'ajustes', label: 'Brillo y volumen' },
+  ],
+  temporizador: [
+    { id: 't1', label: '1 minuto', min: 1 },
+    { id: 't3', label: '3 minutos', min: 3 },
+    { id: 't5', label: '5 minutos', min: 5 },
+    { id: 't10', label: '10 minutos', min: 10 },
+    { id: 't15', label: '15 minutos', min: 15 },
+    { id: 't30', label: '30 minutos', min: 30 },
+    { id: 'cronometro', label: 'Cronómetro' },
+    { id: 'volver', label: 'Volver' },
   ],
   juegos: [
     { id: 'tateti', label: 'Ta-te-ti' },
@@ -69,6 +81,31 @@ function Icon({ id }) {
           <path d="M120 46 v10 M120 88 v10 M94 72 h10 M136 72 h10 M102 54 l7 7 M131 83 l7 7 M138 54 l-7 7 M109 83 l-7 7" />
         </g>
       );
+    case 'cocina':
+      return (
+        <g>
+          <path d="M92 66 h56 v18 a14 14 0 0 1 -14 14 h-28 a14 14 0 0 1 -14 -14 z M86 66 h68" />
+          <path d="M108 56 q4 -8 0 -14 M120 56 q4 -8 0 -14 M132 56 q4 -8 0 -14" />
+        </g>
+      );
+    case 'temporizador':
+    case 'cronometro':
+      return (
+        <g>
+          <path d="M100 46 h40 M100 98 h40 M104 46 q0 18 16 26 q-16 8 -16 26 M136 46 q0 18 -16 26 q16 8 16 26" />
+        </g>
+      );
+    case 't1':
+    case 't3':
+    case 't5':
+    case 't10':
+    case 't15':
+    case 't30':
+      return (
+        <text x="120" y="92" textAnchor="middle" className="menu-num">
+          {id.slice(1)}
+        </text>
+      );
     case 'tateti':
       return <path d="M108 50 v48 M132 50 v48 M96 62 h48 M96 86 h48" />;
     case 'ppt':
@@ -99,7 +136,7 @@ export default function ScreenMenu({ level, index }) {
   return (
     <g className="screen-menu">
       <text className="menu-crumb" x="-24" y="26">
-        {level === 'juegos' ? 'Menú › Juegos' : 'Menú'}
+        {level === 'juegos' ? 'Menú › Juegos' : level === 'temporizador' ? 'Menú › Temporizador' : 'Menú'}
       </text>
       <g className="menu-icon">
         <Icon id={item.id} />
@@ -128,6 +165,24 @@ export function Peek({ lines }) {
           {l}
         </text>
       ))}
+    </g>
+  );
+}
+
+/** Cronómetro grande (cuenta para adelante). Un toque lo pausa o lo sigue. */
+export function Stopwatch({ ms, running }) {
+  const total = Math.floor(ms / 100);
+  const d = total % 10;
+  const s = Math.floor(total / 10) % 60;
+  const m = Math.floor(total / 600);
+  return (
+    <g className="screen-peek">
+      <text x="120" y="98" textAnchor="middle" className="stopwatch">
+        {`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${d}`}
+      </text>
+      <text x="120" y="140" textAnchor="middle" className="menu-hint">
+        {running ? 'tocá para pausar · deslizá arriba para salir' : 'en pausa · tocá para seguir · deslizá arriba para salir'}
+      </text>
     </g>
   );
 }

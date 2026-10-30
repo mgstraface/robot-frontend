@@ -1469,3 +1469,23 @@ label {
 .dot.on { fill: var(--eye); }
 .peek-big { fill: #fff; font: 800 40px 'Space Grotesk', sans-serif; }
 .peek-line { fill: var(--eye); font: 600 15px 'Space Grotesk', sans-serif; }
+
+/* ---------- Cocina y timers ---------- */
+.stage-figure { position: relative; }
+.timer-badge { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 0.5rem; padding: 0.3rem 0.8rem; border-radius: 999px; background: #1a1720; color: #fff; box-shadow: var(--shadow); font-size: 0.8rem; z-index: 2; max-width: 90%; }
+.timer-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 14rem; color: #cfc6b2; }
+.timer-badge strong { font: 700 1rem 'Space Grotesk', sans-serif; color: #f2a541; }
+.menu-num { fill: var(--eye); stroke: none; font: 800 54px 'Space Grotesk', sans-serif; }
+.stopwatch { fill: #fff; font: 800 52px 'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums; }
+.cocina-activa { padding: 0.9rem 1rem; border-radius: 14px; background: var(--surface-2); margin-bottom: 1rem; display: grid; gap: 0.6rem; }
+.cocina-activa h3 { margin: 0; }
+.cocina-paso { margin: 0; font-size: 1.15rem; line-height: 1.45; display: grid; gap: 0.2rem; }
+.cocina-paso small { color: var(--muted); font-size: 0.8rem; }
+.ingredientes { margin: 0; padding-left: 1.2rem; }
+.cocina-timers { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.cocina-timers li { display: flex; justify-content: space-between; gap: 0.6rem; }
+.cocina-timers strong { font-variant-numeric: tabular-nums; color: #d97706; }
+.recetas { list-style: none; margin: 0.4rem 0 1rem; padding: 0; display: grid; gap: 0.4rem; }
+.recetas li { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.55rem 0.7rem; border-radius: 10px; background: var(--surface-2); }
+.recetas li div:first-child { display: grid; }
+.recetas small { color: var(--muted); }

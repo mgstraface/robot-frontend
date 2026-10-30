@@ -16,7 +16,8 @@ import { ARM_LABELS, GESTURE_LABELS, useHead } from './head.js';
 import Body from './components/Body.jsx';
 import MoodBars from './components/MoodBars.jsx';
 import RobotPanel from './components/RobotPanel.jsx';
-import ScreenMenu, { MENU, Peek } from './components/ScreenMenu.jsx';
+import ScreenMenu, { MENU, Peek, Stopwatch } from './components/ScreenMenu.jsx';
+import CocinaPanel from './components/CocinaPanel.jsx';
 import { useTouchGestures } from './useTouchGestures.js';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
@@ -51,7 +52,27 @@ const TRIVIA_PROMPT =
 const SINO_PROMPT =
   'Juguemos a "sí o no": yo te hago preguntas y vos respondés como una bola 8 mágica, misterioso y en una sola frase corta, siempre moviendo la cabeza (asentir o negar). Arrancá diciendo que estás listo.';
 
-const KIND_LABELS = { fecha: 'Fecha', animo: 'Ánimo', futbol: "Newell's", timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
+const KIND_LABELS = { cocina: 'Cocina', fecha: 'Fecha', animo: 'Ánimo', futbol: "Newell's", timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
+
+// Cartelito con la cuenta regresiva más próxima (timers de cocina y sueltos)
+function TimerBadge({ cocina, timers }) {
+  const now = Date.now();
+  const all = [
+    ...(cocina?.timers || []).map((t) => ({ label: t.label, end: t.endsAt })),
+    ...(timers || []).map((t) => ({ label: t.text || 'Timer', end: new Date(t.at).getTime() })),
+  ].filter((t) => t.end > now);
+  if (!all.length) return null;
+  all.sort((a, b) => a.end - b.end);
+  const s = Math.round((all[0].end - now) / 1000);
+  const txt = s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  return (
+    <div className="timer-badge" role="timer" aria-label={`${all[0].label}: faltan ${txt}`}>
+      <span>{all[0].label}</span>
+      <strong>{txt}</strong>
+      {all.length > 1 && <small>+{all.length - 1}</small>}
+    </div>
+  );
+}
 
 function pcVoiceOn() {
   try {
@@ -91,6 +112,7 @@ const TABS = [
   { id: 'appearance', label: 'Apariencia' },
   { id: 'routines', label: 'Rutinas' },
   { id: 'games', label: 'Juegos' },
+  { id: 'cocina', label: 'Cocina' },
   { id: 'photos', label: 'Fotos' },
   { id: 'personality', label: 'Personalidad' },
   { id: 'history', label: 'Memoria' },
@@ -139,6 +161,10 @@ export default function App() {
   // Menú en la pantalla del robot (deslizar) y vistazo rápido (deslizar hacia abajo)
   const [menu, setMenu] = useState(null); // { level, index }
   const [peek, setPeek] = useState(null); // líneas de texto
+  const [cocina, setCocina] = useState(null); // receta en curso (la maneja el servidor)
+  const [timers, setTimers] = useState([]); // temporizadores sueltos
+  const [crono, setCrono] = useState(null); // { since, acc, running }
+  const [, setClock] = useState(0);
   useEffect(() => {
     const on = (e) => setTalking(Boolean(e.detail));
     window.addEventListener('robot-talking', on);
@@ -435,6 +461,29 @@ export default function App() {
     }
   }
 
+  // Cocina y temporizadores: se consultan cada pocos segundos (los avisos llegan por el feed)
+  useEffect(() => {
+    if (!cfg) return undefined;
+    let alive = true;
+    const load = () => {
+      api.cocina().then((c) => alive && setCocina(c)).catch(() => {});
+      api.timers().then((t) => alive && setTimers(t)).catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 4000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [cfg]);
+  // reloj para las cuentas regresivas y el cronómetro
+  useEffect(() => {
+    const running = crono?.running || cocina?.timers?.length || timers.length;
+    if (!running) return undefined;
+    const id = setInterval(() => setClock((n) => n + 1), crono?.running ? 100 : 1000);
+    return () => clearInterval(id);
+  }, [crono, cocina, timers]);
+
   // Se cierran solos: el menú a los 10 s sin tocar nada, el vistazo a los 5 s
   useEffect(() => {
     if (!menu) return undefined;
@@ -461,6 +510,26 @@ export default function App() {
 
   async function runMenuItem(item) {
     if (item.id === 'juegos') return setMenu({ level: 'juegos', index: 0 });
+    if (item.id === 'temporizador') return setMenu({ level: 'temporizador', index: 2 });
+    if (item.min) {
+      setMenu(null);
+      try {
+        setTimers(await api.addTimer(item.min * 60));
+        setPeek([`${item.min}:00`, `Timer de ${item.label}`, 'Te aviso cuando termine']);
+      } catch (err) {
+        onError(err);
+      }
+      return null;
+    }
+    if (item.id === 'cronometro') {
+      setMenu(null);
+      return setCrono({ since: Date.now(), acc: 0, running: true });
+    }
+    if (item.id === 'cocina') {
+      setMenu(null);
+      if (cocina?.activa) return api.cocinaAccion('siguiente').then(setCocina).catch(onError);
+      return setPeek(['Cocina', 'Elegí una receta', 'en la pestaña Cocina']);
+    }
     if (item.id === 'volver') return setMenu({ level: 'main', index: 0 });
     setMenu(null);
     if (['tateti', 'ppt', 'ojo', 'truco'].includes(item.id)) return playGame(item.id);
@@ -483,8 +552,14 @@ export default function App() {
 
   const gestures = useTouchGestures({
     onTap: (e) => {
+      if (crono) {
+        const now = Date.now();
+        return setCrono(crono.running ? { ...crono, running: false, acc: crono.acc + now - crono.since } : { ...crono, running: true, since: now });
+      }
       if (peek) return setPeek(null);
       if (menu) return runMenuItem(MENU[menu.level][menu.index]);
+      // cocinando, un toque pasa al paso siguiente (tenés las manos ocupadas)
+      if (cocina?.activa) return api.cocinaAccion('siguiente').then(setCocina).catch(onError);
       return pet(e);
     },
     onTripleTap: () => {
@@ -501,6 +576,10 @@ export default function App() {
     },
     onSwipe: (dir) => {
       setPeek(null);
+      if (crono) {
+        if (dir === 'arriba' || dir === 'abajo') setCrono(null);
+        return null;
+      }
       if (dir === 'arriba') return setMenu(null);
       if (dir === 'abajo') return menu ? setMenu(null) : showPeek();
       const items = MENU[menu?.level || 'main'];
@@ -577,7 +656,11 @@ export default function App() {
             <div className="stage-figure">
               <div className="head touchable" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }} {...gestures}>
                 <div className={`head-gesture ${head.gesture ? `g-${head.gesture}` : ''}`}>
-                  {menu ? (
+                  {crono ? (
+                    <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
+                      <Stopwatch ms={crono.running ? crono.acc + Date.now() - crono.since : crono.acc} running={crono.running} />
+                    </Face>
+                  ) : menu ? (
                     <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
                       <ScreenMenu level={menu.level} index={menu.index} />
                     </Face>
@@ -590,6 +673,7 @@ export default function App() {
                   )}
                 </div>
               </div>
+              <TimerBadge cocina={cocina} timers={timers} />
               <Body pose={head.pose} gesture={head.gesture} emotion={emotion} eyeColor={look.eyeColor} />
             </div>
             <div className="expressions" role="group" aria-label="Expresiones">
@@ -706,6 +790,7 @@ export default function App() {
           {tab === 'personality' && <PersonalityPanel onSaved={(p) => setName(p.name)} onError={onError} />}
           {tab === 'history' && <HistoryPanel onError={onError} />}
           {tab === 'events' && <EventsPanel status={status} />}
+          {tab === 'cocina' && <CocinaPanel cocina={cocina} onCocina={setCocina} onError={onError} />}
           {tab === 'robot' && <RobotPanel status={status} onError={onError} />}
         </section>
       </main>

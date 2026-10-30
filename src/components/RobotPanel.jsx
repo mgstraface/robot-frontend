@@ -40,6 +40,7 @@ export default function RobotPanel({ status, onError }) {
   const [angle, setAngle] = useState(90);
   const [token, setToken] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [ota, setOta] = useState(null);
   const [msg, setMsg] = useState('');
   const sendTimer = useRef(null);
 
@@ -131,7 +132,10 @@ export default function RobotPanel({ status, onError }) {
           <dt>Último contacto</dt>
           <dd>{ago(d.lastSeen)}</dd>
           <dt>Firmware</dt>
-          <dd>{d.status?.firmware || '—'}</dd>
+          <dd>
+            {d.status?.firmware || '—'}
+            {d.build ? ` (compilación ${d.build})` : d.status ? ' (cargado por cable)' : ''}
+          </dd>
           <dt>Encendido hace</dt>
           <dd>{uptime(d.status?.uptime)}</dd>
           <dt>Último reinicio</dt>
@@ -144,6 +148,31 @@ export default function RobotPanel({ status, onError }) {
           <dd>{d.status?.sensores ? JSON.stringify(d.status.sensores) : '—'}</dd>
         </dl>
       ))}
+
+      <div className="row wrap">
+        <button
+          type="button"
+          className="small"
+          disabled={!online || ota === '…'}
+          onClick={() => {
+            setOta('…');
+            api
+              .robotOta()
+              .then((r) => {
+                if (!r.latest) return setOta('Todavía no hay firmware publicado.');
+                const d = r.devices[0];
+                setOta(d?.estado === 'actualizando' ? `Actualizando a la compilación ${r.latest}: mirá la pantalla de la placa.` : `Está al día (compilación ${r.latest}).`);
+              })
+              .catch((e) => {
+                setOta(null);
+                onError(e);
+              });
+          }}
+        >
+          Buscar actualización
+        </button>
+        {ota && ota !== '…' && <span className="muted">{ota}</span>}
+      </div>
 
       <div className="row wrap" role="group" aria-label="Pruebas">
         {TESTS.map((t) => (

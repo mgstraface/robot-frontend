@@ -15,6 +15,8 @@ function timeOf(ts, tz) {
  * Rutinas: saludo con clima y agenda, horario de dormir, agua, modo susto, avisos de reuniones y deploys.
  * onPlay(actions, weather) muestra una animación en la cara grande.
  */
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
 const VOCES = {
   'es-AR-TomasNeural': 'Tomás (argentino)',
   'es-AR-ElenaNeural': 'Elena (argentina)',
@@ -67,6 +69,7 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
   }
   const frasesText = (form.frasesLeprosas || []).join('\n');
   if (frasesText !== (saved.frasesLeprosas || []).join('\n')) changed.frasesLeprosas = form.frasesLeprosas;
+  if (JSON.stringify(form.fechas || []) !== JSON.stringify(saved.fechas || [])) changed.fechas = form.fechas || [];
   if (form.city.name !== saved.city.name || form.city.lat !== saved.city.lat) changed.city = form.city;
   if (calendarUrl.trim()) changed.calendarUrl = calendarUrl.trim();
   const dirty = Object.keys(changed).length > 0;
@@ -290,6 +293,48 @@ export default function RoutinesPanel({ onSettings, onPlay, onError, onNeedsFeed
         <input type="checkbox" checked={form.deployReactions} onChange={(e) => set({ deployReactions: e.target.checked })} />
         Festejar o llorar según cómo salen los deploys
       </label>
+
+      <h3>Cumpleaños y fechas</h3>
+      <p className="hint">Te avisa 3 días antes, el día anterior y el mismo día.</p>
+      <ul className="fechas-list">
+        {(form.fechas || []).map((f, i) => (
+          <li key={i}>
+            <input
+              aria-label="Nombre"
+              value={f.nombre}
+              maxLength={60}
+              placeholder="Nombre"
+              onChange={(e) => set({ fechas: form.fechas.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)) })}
+            />
+            <input
+              aria-label="Día"
+              type="number"
+              min={1}
+              max={31}
+              value={f.dia}
+              onChange={(e) => set({ fechas: form.fechas.map((x, j) => (j === i ? { ...x, dia: Number(e.target.value) } : x)) })}
+            />
+            <select aria-label="Mes" value={f.mes} onChange={(e) => set({ fechas: form.fechas.map((x, j) => (j === i ? { ...x, mes: Number(e.target.value) } : x)) })}>
+              {MESES.map((m, k) => (
+                <option key={m} value={k + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <select aria-label="Tipo" value={f.tipo} onChange={(e) => set({ fechas: form.fechas.map((x, j) => (j === i ? { ...x, tipo: e.target.value } : x)) })}>
+              <option value="cumple">Cumpleaños</option>
+              <option value="aniversario">Aniversario</option>
+              <option value="otro">Otra fecha</option>
+            </select>
+            <button type="button" className="ghost small" onClick={() => set({ fechas: form.fechas.filter((_, j) => j !== i) })} aria-label={`Quitar ${f.nombre || 'fecha'}`}>
+              Quitar
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="ghost" onClick={() => set({ fechas: [...(form.fechas || []), { nombre: '', dia: 1, mes: 1, tipo: 'cumple' }] })}>
+        Agregar fecha
+      </button>
 
       <h3>Newell's</h3>
       <label className="check">

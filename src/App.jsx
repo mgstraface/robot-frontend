@@ -14,6 +14,8 @@ import TatetiGame from './components/games/TatetiGame.jsx';
 import TrucoGame from './components/games/TrucoGame.jsx';
 import { ARM_LABELS, GESTURE_LABELS, useHead } from './head.js';
 import Body from './components/Body.jsx';
+import MoodBars from './components/MoodBars.jsx';
+import RobotPanel from './components/RobotPanel.jsx';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
 import { photoUrl } from './photos.js';
@@ -47,7 +49,7 @@ const TRIVIA_PROMPT =
 const SINO_PROMPT =
   'Juguemos a "sí o no": yo te hago preguntas y vos respondés como una bola 8 mágica, misterioso y en una sola frase corta, siempre moviendo la cabeza (asentir o negar). Arrancá diciendo que estás listo.';
 
-const KIND_LABELS = { futbol: "Newell's", timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
+const KIND_LABELS = { fecha: 'Fecha', animo: 'Ánimo', futbol: "Newell's", timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
 
 function pcVoiceOn() {
   try {
@@ -91,6 +93,7 @@ const TABS = [
   { id: 'personality', label: 'Personalidad' },
   { id: 'history', label: 'Memoria' },
   { id: 'events', label: 'Eventos' },
+  { id: 'robot', label: 'Robot' },
 ];
 
 export default function App() {
@@ -130,6 +133,7 @@ export default function App() {
   });
   const action = forced || idleAction;
   const [talking, setTalking] = useState(false);
+  const [moodBump, setMoodBump] = useState(0);
   useEffect(() => {
     const on = (e) => setTalking(Boolean(e.detail));
     window.addEventListener('robot-talking', on);
@@ -399,8 +403,10 @@ export default function App() {
   }
 
   function playGame(id) {
-    if (id === 'trivia' || id === 'sino') {
-      setChatPrompt({ id: Date.now(), text: id === 'trivia' ? TRIVIA_PROMPT : SINO_PROMPT });
+    api.moodEvent('juego').then(() => setMoodBump((n) => n + 1)).catch(() => {});
+    if (id === 'trivia' || id === 'sino' || id === 'cuento') {
+      const text = id === 'trivia' ? TRIVIA_PROMPT : id === 'sino' ? SINO_PROMPT : 'Robi, contame un cuento de terror.';
+      setChatPrompt({ id: Date.now(), text });
       return;
     }
     setGame(id);
@@ -428,6 +434,7 @@ export default function App() {
 
   function pet(e) {
     changeEmotion(action === 'dormir' ? 'sorprendido' : 'amor');
+    api.moodEvent('mimo').then(() => setMoodBump((n) => n + 1)).catch(() => {});
     // mira hacia el lado donde lo tocaron (como las zonas táctiles del robot)
     const r = e?.currentTarget?.getBoundingClientRect?.();
     if (r && e.clientX) {
@@ -521,6 +528,7 @@ export default function App() {
                 {announcement.text}
               </p>
             )}
+            <MoodBars bump={moodBump} />
             <div className="focus-bar">
               {focus ? (
                 <>
@@ -608,6 +616,7 @@ export default function App() {
           {tab === 'personality' && <PersonalityPanel onSaved={(p) => setName(p.name)} onError={onError} />}
           {tab === 'history' && <HistoryPanel onError={onError} />}
           {tab === 'events' && <EventsPanel status={status} />}
+          {tab === 'robot' && <RobotPanel status={status} onError={onError} />}
         </section>
       </main>
 

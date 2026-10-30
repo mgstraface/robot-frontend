@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { EMOTION_LABELS } from './Face.jsx';
+import MemoriesPanel from './MemoriesPanel.jsx';
 
 const SOURCE_LABELS = { voice: 'voz', text: 'texto', panel: 'panel' };
 
@@ -33,6 +34,8 @@ export default function HistoryPanel({ onError }) {
 
   return (
     <div className="history">
+      <MemoriesPanel onError={onError} />
+      <h3>Conversaciones</h3>
       <div className="row">
         <select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
           <option value="">Todos</option>

@@ -1425,3 +1425,36 @@ label {
 @keyframes ba-point { 20%, 80% { transform: rotate(-95deg); } 40% { transform: rotate(-85deg); } 60% { transform: rotate(-100deg); } }
 @media (prefers-reduced-motion: reduce) { .body *, .body { animation: none !important; transition: none !important; } }
 @media (max-width: 520px) { .body { width: 90px; } }
+
+/* ---------- Ánimo ---------- */
+.mood { width: 100%; max-width: 420px; margin: 10px auto 4px; display: grid; gap: 6px; }
+.mood-row { display: grid; grid-template-columns: 9.5rem 1fr; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--muted); }
+.mood-track { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.mood-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+.m-energia { background: #f2a541; }
+.m-humor { background: #9be564; }
+.m-atencion { background: #5ab0ff; }
+.mood-text { margin: 2px 0 0; font-size: 0.8rem; color: var(--muted); text-align: center; }
+
+/* ---------- Memoria ---------- */
+.memories { margin-bottom: 1.2rem; }
+.memory-list { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+.memory-list li { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.5rem 0.7rem; border-radius: 10px; background: var(--surface-2); font-size: 0.9rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Fechas ---------- */
+.fechas-list { list-style: none; margin: 0.4rem 0 0.6rem; padding: 0; display: grid; gap: 0.4rem; }
+.fechas-list li { display: grid; grid-template-columns: minmax(0, 1fr) 4.2rem 9rem 9.5rem auto; gap: 0.4rem; align-items: center; }
+@media (max-width: 560px) { .fechas-list li { grid-template-columns: 1fr 4rem; } }
+
+/* ---------- Robot: diagnóstico y calibración ---------- */
+.robot-panel h3 { margin-top: 1rem; }
+.diag { display: grid; grid-template-columns: 9rem 1fr; gap: 0.3rem 0.8rem; margin: 0.4rem 0 0.8rem; font-size: 0.9rem; }
+.diag dt { color: var(--muted); }
+.diag dd { margin: 0; word-break: break-word; }
+.row.wrap { flex-wrap: wrap; }
+.calib { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
+.calib input[type=range] { width: 100%; }
+.calib-values { margin: 0; font-size: 0.9rem; color: var(--muted); }
+.warn { color: #d97706; font-size: 0.85rem; margin-left: 0.4rem; }
+.stop { min-width: 6rem; font-weight: 700; }

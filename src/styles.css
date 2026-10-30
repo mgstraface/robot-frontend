@@ -1458,3 +1458,14 @@ label {
 .calib-values { margin: 0; font-size: 0.9rem; color: var(--muted); }
 .warn { color: #d97706; font-size: 0.85rem; margin-left: 0.4rem; }
 .stop { min-width: 6rem; font-weight: 700; }
+
+/* ---------- Pantalla táctil: menú y vistazo ---------- */
+.touchable { touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.screen-menu .menu-icon { fill: none; stroke: var(--eye); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; animation: pop 0.25s ease-out; }
+.menu-label { fill: #fff; font: 700 20px 'Space Grotesk', sans-serif; }
+.menu-crumb { fill: var(--eye); font: 600 11px 'Space Grotesk', sans-serif; letter-spacing: 1px; opacity: 0.8; }
+.menu-hint { fill: #9a96a3; font: 500 9px 'Space Grotesk', sans-serif; }
+.dot { fill: #4a4752; }
+.dot.on { fill: var(--eye); }
+.peek-big { fill: #fff; font: 800 40px 'Space Grotesk', sans-serif; }
+.peek-line { fill: var(--eye); font: 600 15px 'Space Grotesk', sans-serif; }

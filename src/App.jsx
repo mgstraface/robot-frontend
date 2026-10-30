@@ -16,6 +16,8 @@ import { ARM_LABELS, GESTURE_LABELS, useHead } from './head.js';
 import Body from './components/Body.jsx';
 import MoodBars from './components/MoodBars.jsx';
 import RobotPanel from './components/RobotPanel.jsx';
+import ScreenMenu, { MENU, Peek } from './components/ScreenMenu.jsx';
+import { useTouchGestures } from './useTouchGestures.js';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
 import { photoUrl } from './photos.js';
@@ -134,6 +136,9 @@ export default function App() {
   const action = forced || idleAction;
   const [talking, setTalking] = useState(false);
   const [moodBump, setMoodBump] = useState(0);
+  // Menú en la pantalla del robot (deslizar) y vistazo rápido (deslizar hacia abajo)
+  const [menu, setMenu] = useState(null); // { level, index }
+  const [peek, setPeek] = useState(null); // líneas de texto
   useEffect(() => {
     const on = (e) => setTalking(Boolean(e.detail));
     window.addEventListener('robot-talking', on);
@@ -368,8 +373,6 @@ export default function App() {
     return () => clearTimeout(id);
   }, [toast]);
 
-  if (checking) return null;
-  if (!cfg) return <Login onLogin={setCfg} />;
 
   const devices = status?.devices || [];
   const robotId = devices[0]?.deviceId;
@@ -432,6 +435,81 @@ export default function App() {
     }
   }
 
+  // Se cierran solos: el menú a los 10 s sin tocar nada, el vistazo a los 5 s
+  useEffect(() => {
+    if (!menu) return undefined;
+    const t = setTimeout(() => setMenu(null), 10000);
+    return () => clearTimeout(t);
+  }, [menu]);
+  useEffect(() => {
+    if (!peek) return undefined;
+    const t = setTimeout(() => setPeek(null), 5000);
+    return () => clearTimeout(t);
+  }, [peek]);
+
+  async function showPeek() {
+    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    const robot = status?.devices?.length ? 'Robot conectado' : 'Robot sin conexión';
+    setPeek([hora, 'Clima: …', robot]);
+    try {
+      const w = await api.weather();
+      setPeek((p) => p && [p[0], `${w.temp}° · ${w.category}`, p[2]]);
+    } catch {
+      /* queda sin clima */
+    }
+  }
+
+  async function runMenuItem(item) {
+    if (item.id === 'juegos') return setMenu({ level: 'juegos', index: 0 });
+    if (item.id === 'volver') return setMenu({ level: 'main', index: 0 });
+    setMenu(null);
+    if (['tateti', 'ppt', 'ojo', 'truco'].includes(item.id)) return playGame(item.id);
+    if (item.id === 'timer') return focus ? null : toggleFocus();
+    if (item.id === 'clima') return tryRoutine('clima');
+    if (item.id === 'fotos') return photos.length ? showPhoto(8000) : setPeek(['Sin fotos', 'Subilas en la pestaña Fotos']);
+    if (item.id === 'modo') {
+      const faceStyle = look.faceStyle === 'terror' ? 'tierno' : 'terror';
+      try {
+        const p = await api.savePersonality({ eyeColor: look.eyeColor, faceStyle });
+        setAppearance({ eyeColor: p.eyeColor, faceStyle: p.faceStyle });
+      } catch (err) {
+        onError(err);
+      }
+      return null;
+    }
+    if (item.id === 'ajustes') return setPeek(['Brillo y volumen', 'Se ajustan en el robot', '(cuando esté armado)']);
+    return null;
+  }
+
+  const gestures = useTouchGestures({
+    onTap: (e) => {
+      if (peek) return setPeek(null);
+      if (menu) return runMenuItem(MENU[menu.level][menu.index]);
+      return pet(e);
+    },
+    onTripleTap: () => {
+      if (menu || peek) return;
+      if (look.faceStyle === 'terror') playActions(['risa']);
+      else changeEmotion('riendo');
+      head.playGesture('bailar');
+      api.moodEvent('mimo').then(() => setMoodBump((n) => n + 1)).catch(() => {});
+    },
+    onLongPress: () => {
+      if (menu || peek) return;
+      changeEmotion('escuchando');
+      setPeek(['Te escucho…', '(con el micrófono armado)']);
+    },
+    onSwipe: (dir) => {
+      setPeek(null);
+      if (dir === 'arriba') return setMenu(null);
+      if (dir === 'abajo') return menu ? setMenu(null) : showPeek();
+      const items = MENU[menu?.level || 'main'];
+      if (!menu) return setMenu({ level: 'main', index: 0 });
+      const step = dir === 'izquierda' ? 1 : -1;
+      return setMenu({ ...menu, index: (menu.index + step + items.length) % items.length });
+    },
+  });
+
   function pet(e) {
     changeEmotion(action === 'dormir' ? 'sorprendido' : 'amor');
     api.moodEvent('mimo').then(() => setMoodBump((n) => n + 1)).catch(() => {});
@@ -463,6 +541,8 @@ export default function App() {
     }
   }
 
+  if (checking) return null;
+  if (!cfg) return <Login onLogin={setCfg} />;
   return (
     <div className="app">
       <header className="topbar">
@@ -495,9 +575,19 @@ export default function App() {
             {!game && (
             <>
             <div className="stage-figure">
-              <div className="head" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }}>
+              <div className="head touchable" style={{ '--pan': `${head.pose.pan}deg`, '--tilt': `${head.pose.tilt}deg` }} {...gestures}>
                 <div className={`head-gesture ${head.gesture ? `g-${head.gesture}` : ''}`}>
-                  <Face emotion={emotion} action={action} size={340} onPet={pet} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} talking={talking && !action} />
+                  {menu ? (
+                    <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
+                      <ScreenMenu level={menu.level} index={menu.index} />
+                    </Face>
+                  ) : peek ? (
+                    <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
+                      <Peek lines={peek} />
+                    </Face>
+                  ) : (
+                    <Face emotion={emotion} action={action} size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle} photo={photo} talking={talking && !action} />
+                  )}
                 </div>
               </div>
               <Body pose={head.pose} gesture={head.gesture} emotion={emotion} eyeColor={look.eyeColor} />

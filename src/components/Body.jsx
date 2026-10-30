@@ -17,7 +17,7 @@ const ARM_REST = {
   pensando: [0, 95],
 };
 
-export default function Body({ pose, gesture, emotion, eyeColor }) {
+export default function Body({ pose, gesture, emotion, eyeColor, onZone }) {
   const [l, r] = ARM_REST[emotion] || [0, 0];
   const g = gesture ? `b-${gesture}` : '';
   return (
@@ -41,6 +41,17 @@ export default function Body({ pose, gesture, emotion, eyeColor }) {
         <circle cx="62" cy="60" r="3.2" className="body-eye" />
         <circle cx="78" cy="60" r="3.2" className="body-eye" />
       </g>
+      {/* zonas táctiles (los mismos sensores que el robot): cabeza y panza */}
+      {onZone && (
+        <>
+          <ellipse cx="70" cy="58" rx="30" ry="30" className="body-zone" onClick={() => onZone('cabeza')}>
+            <title>Sensor de la cabeza</title>
+          </ellipse>
+          <ellipse cx="70" cy="124" rx="24" ry="26" className="body-zone" onClick={() => onZone('panza')}>
+            <title>Sensor de la panza</title>
+          </ellipse>
+        </>
+      )}
     </svg>
   );
 }

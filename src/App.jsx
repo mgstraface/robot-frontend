@@ -609,6 +609,14 @@ export default function App() {
     },
   });
 
+  // sensores del cuerpo: cocinando, cabeza = siguiente y panza = anterior; si no, mimo / cosquillita
+  function touchZone(zone) {
+    if (cocina?.activa) return api.cocinaAccion(zone === 'cabeza' ? 'siguiente' : 'anterior').then(setCocina).catch(onError);
+    changeEmotion(zone === 'cabeza' ? (action === 'dormir' ? 'sorprendido' : 'feliz') : 'amor');
+    head.playGesture(zone === 'cabeza' ? 'asentir' : 'abrazo');
+    return api.moodEvent(zone === 'cabeza' ? 'mimo' : 'tocar').then(() => setMoodBump((n) => n + 1)).catch(() => {});
+  }
+
   function lookAtTouch(e) {
     const r = e?.currentTarget?.getBoundingClientRect?.();
     if (r && e.clientX) head.glance(((e.clientX - r.left) / r.width - 0.5) * 2 * 45, 5, 1500);
@@ -689,7 +697,7 @@ export default function App() {
                     <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
                       <ScreenMenu level={menu.level} index={menu.index} items={menu.items} />
                     </Face>
-                  ) : cocina?.activa && !peek ? (
+                  ) : cocina?.activa && !peek && !talking ? (
                     <Face size={340} eyeColor={look.eyeColor} faceStyle={look.faceStyle}>
                       <CocinaScreen cocina={cocina} now={Date.now()} />
                     </Face>
@@ -703,7 +711,7 @@ export default function App() {
                 </div>
               </div>
               {!cocina?.activa && <TimerBadge cocina={cocina} timers={timers} />}
-              <Body pose={head.pose} gesture={head.gesture} emotion={emotion} eyeColor={look.eyeColor} />
+              <Body pose={head.pose} gesture={head.gesture} emotion={emotion} eyeColor={look.eyeColor} onZone={touchZone} />
             </div>
             <div className="expressions" role="group" aria-label="Expresiones">
               {cfg.emotions.map((e) => (

@@ -142,9 +142,17 @@ export default function ScreenMenu({ level, index, items: custom }) {
       <g className="menu-icon">
         <Icon id={item.id} />
       </g>
-      <text className="menu-label" x="120" y="132" textAnchor="middle">
-        {item.label}
-      </text>
+      {item.label.length > 22 ? (
+        wrap(item.label, 34, 2).map((l, i) => (
+          <text key={i} className="menu-label small" x="120" y={124 + i * 15} textAnchor="middle">
+            {l}
+          </text>
+        ))
+      ) : (
+        <text className="menu-label" x="120" y="132" textAnchor="middle">
+          {item.label}
+        </text>
+      )}
       <g>
         {items.map((it, i) => (
           <circle key={it.id} cx={120 + (i - (items.length - 1) / 2) * 12} cy="152" r={i === index ? 3.6 : 2.4} className={i === index ? 'dot on' : 'dot'} />
@@ -209,14 +217,15 @@ export function CocinaScreen({ cocina, now }) {
   const paso = cocina.paso >= 0 ? r.pasos[cocina.paso] : null;
   const timer = [...cocina.timers].sort((a, b) => a.endsAt - b.endsAt)[0];
   const rest = timer ? Math.max(0, Math.round((timer.endsAt - now) / 1000)) : 0;
-  const lines = paso ? wrap(paso.texto, 30, 3) : wrap(`Ingredientes: ${r.ingredientes.join(', ')}`, 34, 4);
+  const lines = paso ? wrap(paso.texto, 38, 4) : wrap(`Ingredientes: ${r.ingredientes.join(', ')}`, 40, 5);
+  const nombre = r.nombre.length > 34 ? `${r.nombre.slice(0, 33)}…` : r.nombre;
   return (
     <g className="screen-cocina">
       <text className="menu-crumb" x="-24" y="26">
-        {paso ? `${r.nombre} · paso ${cocina.paso + 1} de ${r.pasos.length}` : r.nombre}
+        {paso ? `${nombre} · paso ${cocina.paso + 1}/${r.pasos.length}` : nombre}
       </text>
       {lines.map((l, i) => (
-        <text key={i} x="120" y={(timer ? 58 : 72) + i * 22} textAnchor="middle" className="cocina-line">
+        <text key={i} x="120" y={(timer ? 52 : 60) + i * 18} textAnchor="middle" className="cocina-line">
           {l}
         </text>
       ))}
@@ -226,7 +235,7 @@ export function CocinaScreen({ cocina, now }) {
         </text>
       )}
       <text x="120" y="172" textAnchor="middle" className="menu-hint">
-        {paso ? 'tocá: siguiente paso · mantené: terminar' : 'tocá para arrancar · mantené: terminar'}
+        {paso ? 'tocá o cabeza: siguiente · panza: anterior · mantené: terminar' : 'tocá o tocale la cabeza para arrancar · mantené: terminar'}
       </text>
     </g>
   );

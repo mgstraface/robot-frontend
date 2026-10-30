@@ -1462,8 +1462,9 @@ label {
 /* ---------- Pantalla táctil: menú y vistazo ---------- */
 .touchable { touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .screen-menu .menu-icon { fill: none; stroke: var(--eye); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; animation: pop 0.25s ease-out; }
-.menu-label { fill: #fff; font: 700 20px 'Space Grotesk', sans-serif; }
-.menu-crumb { fill: var(--eye); font: 600 11px 'Space Grotesk', sans-serif; letter-spacing: 1px; opacity: 0.8; }
+.menu-label { fill: #fff; font: 700 17px 'Space Grotesk', sans-serif; }
+.menu-label.small { font-size: 13px; }
+.menu-crumb { fill: var(--eye); font: 600 9px 'Space Grotesk', sans-serif; letter-spacing: 0.5px; opacity: 0.8; }
 .menu-hint { fill: #9a96a3; font: 500 9px 'Space Grotesk', sans-serif; }
 .dot { fill: #4a4752; }
 .dot.on { fill: var(--eye); }
@@ -1490,5 +1491,8 @@ label {
 .recetas li div:first-child { display: grid; }
 .recetas small { color: var(--muted); }
 
-.cocina-line { fill: #fff; font: 600 15px 'Space Grotesk', sans-serif; }
+.cocina-line { fill: #fff; font: 600 12px 'Space Grotesk', sans-serif; }
 .cocina-timer { fill: #f2a541; font: 800 34px 'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums; }
+
+.body-zone { fill: transparent; cursor: pointer; }
+.body-zone:hover { fill: color-mix(in srgb, var(--eye) 18%, transparent); }

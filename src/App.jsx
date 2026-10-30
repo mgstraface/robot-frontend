@@ -45,6 +45,7 @@ const TRIES = [
   { id: 'victoria', label: 'Ganó Newell\'s' },
   { id: 'derrota', label: 'Perdió Newell\'s' },
   { id: 'central-perdio', label: 'Perdió Central' },
+  { id: 'fede', label: '¡FEDE!' },
 ];
 const TRIVIA_PROMPT =
   '¡Juguemos a una trivia de películas de terror! Haceme una pregunta por vez con tres opciones, esperá mi respuesta, decime si acerté y llevá la cuenta.';
@@ -52,7 +53,7 @@ const TRIVIA_PROMPT =
 const SINO_PROMPT =
   'Juguemos a "sí o no": yo te hago preguntas y vos respondés como una bola 8 mágica, misterioso y en una sola frase corta, siempre moviendo la cabeza (asentir o negar). Arrancá diciendo que estás listo.';
 
-const KIND_LABELS = { cocina: 'Cocina', fecha: 'Fecha', animo: 'Ánimo', futbol: "Newell's", timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
+const KIND_LABELS = { fede: 'Fede', menu: 'Menú', cocina: 'Cocina', fecha: 'Fecha', animo: 'Ánimo', futbol: "Newell's", timer: 'Timer', alarma: 'Alarma', recordatorio: 'Recordatorio', saludo: 'Saludo', reunion: 'Reunión', agua: 'Agua', foco: 'Foco', deploy: 'Deploy' };
 
 // Cartelito con la cuenta regresiva más próxima (timers de cocina y sueltos)
 function TimerBadge({ cocina, timers }) {

@@ -22,7 +22,7 @@ import { useTouchGestures } from './useTouchGestures.js';
 import PptGame from './components/games/PptGame.jsx';
 import CatchGame from './components/games/CatchGame.jsx';
 import { photoUrl } from './photos.js';
-import { speak, speakSpooky } from './speech.js';
+import { speak, speakSpooky, stopSpeaking } from './speech.js';
 import { useIdleLife } from './useIdleLife.js';
 
 const LIFE_KEY = 'robot_idle_life';
@@ -534,14 +534,23 @@ export default function App() {
           return setPeek(['Sin recetas', 'Cargá la primera', 'en la pestaña Cocina']);
         }
         const items = [...list.map((r) => ({ id: 'receta', label: r.nombre, recetaId: r._id })), { id: 'volver', label: 'Volver' }];
+        // si hay una receta a medias, lo primero es seguirla donde quedó
+        if (cocina?.activa) {
+          const r = cocina.receta;
+          const donde = cocina.paso >= 0 ? `paso ${cocina.paso + 1}/${r.pasos.length}` : 'ingredientes';
+          items.unshift({ id: 'seguir', label: `Seguir (${donde}): ${r.nombre}` });
+        }
         return setMenu({ level: 'recetas', index: 0, items });
       } catch (err) {
         onError(err);
         return setMenu(null);
       }
     }
+    if (item.id === 'seguir') return setMenu(null);
     if (item.id === 'receta') {
       setMenu(null);
+      // la misma receta que está en curso: se retoma donde quedó, no arranca de cero
+      if (cocina?.activa && cocina.receta?._id === item.recetaId) return null;
       return api.cocinaStart(item.recetaId).then(setCocina).catch(onError);
     }
     if (item.id === 'volver') return setMenu({ level: 'main', index: 0 });
@@ -566,6 +575,8 @@ export default function App() {
 
   const gestures = useTouchGestures({
     onTap: (e) => {
+      // si está hablando, un toque lo calla (y nada más)
+      if (talking) return stopSpeaking();
       if (crono) {
         const now = Date.now();
         return setCrono(crono.running ? { ...crono, running: false, acc: crono.acc + now - crono.since } : { ...crono, running: true, since: now });

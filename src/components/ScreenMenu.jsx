@@ -83,6 +83,7 @@ function Icon({ id }) {
       );
     case 'cocina':
     case 'receta':
+    case 'seguir':
       return (
         <g>
           <path d="M92 66 h56 v18 a14 14 0 0 1 -14 14 h-28 a14 14 0 0 1 -14 -14 z M86 66 h68" />

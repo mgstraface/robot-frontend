@@ -47,6 +47,7 @@ export const api = {
   servo: (servo, angle) => request('/robot/servo', { method: 'POST', body: { servo, angle } }),
   servoStop: () => request('/robot/servo/stop', { method: 'POST' }),
   robotToken: () => request('/robot/token'),
+  robotTalking: (on) => request('/robot/talking', { method: 'POST', body: { on } }),
   robotTest: (what) => request('/robot/test', { method: 'POST', body: { what } }),
   expression: (emotion, deviceId) => request('/robot/expression', { method: 'POST', body: { emotion, deviceId } }),
   say: (text, emotion, deviceId) => request('/robot/say', { method: 'POST', body: { text, emotion, deviceId } }),

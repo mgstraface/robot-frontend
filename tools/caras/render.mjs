@@ -69,6 +69,8 @@ const listas = await page.evaluate(() => window.LISTAS);
 const clips = [];
 for (const st of ['tierno', 'terror']) {
   for (const emo of listas.emociones) clips.push({ name: `e/${st}/${emo}`, props: { emotion: emo, faceStyle: st }, ms: 0, loop: true });
+  // boca hablando: la placa la pega encima de la cara mientras suena la voz
+  clips.push({ name: `boca/${st}`, props: { emotion: 'neutral', faceStyle: st, talking: true }, ms: 0, loop: true });
   for (const a of listas.acciones) {
     if (a.name === 'dormir' || !Number.isFinite(a.ms)) continue;
     if (a.modes && !a.modes.includes(st)) continue;

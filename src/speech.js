@@ -141,8 +141,14 @@ export function speakSpooky(text) {
 
 // Avisa cuando empieza y termina de hablar (la cara mueve la boca mientras tanto)
 let talkId = 0;
+let talkingNow = false;
 function setTalking(on) {
   window.dispatchEvent(new CustomEvent('robot-talking', { detail: on }));
+  // la placa no tiene parlante todavía: se le avisa para que mueva la boca mientras suena acá
+  if (on !== talkingNow) {
+    talkingNow = on;
+    api.robotTalking(on).catch(() => {});
+  }
 }
 
 /** Dice el texto en voz alta. Devuelve una promesa que termina cuando deja de hablar. */

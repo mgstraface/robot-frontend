@@ -38,6 +38,8 @@ export default function RobotPanel({ status, onError }) {
   const [saved, setSaved] = useState(null);
   const [sel, setSel] = useState('pan');
   const [angle, setAngle] = useState(90);
+  const [token, setToken] = useState(null);
+  const [copied, setCopied] = useState(false);
   const [msg, setMsg] = useState('');
   const sendTimer = useRef(null);
 
@@ -91,6 +93,33 @@ export default function RobotPanel({ status, onError }) {
 
   return (
     <div className="robot-panel">
+      <h3>Conectar la placa</h3>
+      <p className="muted">
+        Copiá este token en <code>firmware/include/secrets.h</code>, en la línea <code>ROBI_TOKEN</code>. No lo compartas.
+      </p>
+      {token ? (
+        <div className="token-row">
+          <code className="token">{token}</code>
+          <button
+            type="button"
+            className="small"
+            onClick={() => {
+              navigator.clipboard?.writeText(token).then(() => setCopied(true)).catch(() => {});
+              setTimeout(() => setCopied(false), 2000);
+            }}
+          >
+            {copied ? '¡Copiado!' : 'Copiar'}
+          </button>
+          <button type="button" className="small ghost" onClick={() => setToken(null)}>
+            Ocultar
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="small" onClick={() => api.robotToken().then((r) => setToken(r.token)).catch(onError)}>
+          Mostrar token del robot
+        </button>
+      )}
+
       <h3>Diagnóstico</h3>
       {!online && <p className="muted">El robot no está conectado. Cuando se conecte vas a ver acá su estado.</p>}
       {devices.map((d) => (

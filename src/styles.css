@@ -1496,3 +1496,6 @@ label {
 
 .body-zone { fill: transparent; cursor: pointer; }
 .body-zone:hover { fill: color-mix(in srgb, var(--eye) 18%, transparent); }
+
+.token-row { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+.token { font-size: 0.75rem; word-break: break-all; background: rgba(255,255,255,0.06); padding: 0.3rem 0.5rem; border-radius: 6px; max-width: 100%; }

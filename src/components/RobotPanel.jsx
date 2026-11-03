@@ -42,6 +42,7 @@ export default function RobotPanel({ status, onError }) {
   const [copied, setCopied] = useState(false);
   const [ota, setOta] = useState(null);
   const [msg, setMsg] = useState('');
+  const [girada, setGirada] = useState(false);
   const sendTimer = useRef(null);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function RobotPanel({ status, onError }) {
       .then((s) => {
         setServos(s.servos);
         setSaved(s.servos);
+        setGirada(Boolean(s.pantallaGirada));
         setAngle(s.servos?.pan?.centro ?? 90);
       })
       .catch(onError);
@@ -181,6 +183,22 @@ export default function RobotPanel({ status, onError }) {
           </button>
         ))}
       </div>
+
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={girada}
+          onChange={(e) => {
+            const v = e.target.checked;
+            setGirada(v);
+            api.saveSettings({ pantallaGirada: v }).catch((err) => {
+              setGirada(!v);
+              onError(err);
+            });
+          }}
+        />{' '}
+        Girar la pantalla 180° (si la placa quedó montada al revés)
+      </label>
 
       <h3>Calibración de servos</h3>
       <p className="hint">

@@ -1,0 +1,133 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+// Cuello de 2 servos: pan = giro horizontal (± a la derecha), tilt = vertical (+ mira para arriba).
+// Mismos límites que el robot real.
+export const PAN_MAX = 80;
+export const TILT_MAX = 25;
+
+export const GESTURE_LABELS = {
+  asentir: 'Sí',
+  negar: 'No',
+  mirarArriba: 'Arriba',
+  mirarAbajo: 'Abajo',
+  mirarIzquierda: 'Izquierda',
+  mirarDerecha: 'Derecha',
+  mirarArribaIzq: 'Arriba izq.',
+  mirarArribaDer: 'Arriba der.',
+  mirarAbajoIzq: 'Abajo izq.',
+  mirarAbajoDer: 'Abajo der.',
+  ladear: 'Curioso',  // no es un ladeo real (haría falta otro servo): gira un poco y mira para arriba
+};
+
+// Movimientos de brazos (servos de los hombros). Algunos también mueven la cabeza.
+export const ARM_LABELS = {
+  saludar: 'Saludar',
+  festejar: 'Festejar',
+  aplaudir: 'Aplaudir',
+  hombros: 'No sé',
+  taparse: 'Taparse',
+  abrazo: 'Abrazo',
+  bailar: 'Bailar',
+  senalar: 'Señalar',
+};
+
+// Duración de cada gesto (ms); el robot usa las mismas
+export const GESTURE_MS = {
+  asentir: 1200,
+  negar: 1300,
+  mirarArriba: 1600,
+  mirarAbajo: 1600,
+  mirarIzquierda: 1600,
+  mirarDerecha: 1600,
+  mirarArribaIzq: 1600,
+  mirarArribaDer: 1600,
+  mirarAbajoIzq: 1600,
+  mirarAbajoDer: 1600,
+  ladear: 1600,
+  saludar: 2200,
+  festejar: 2400,
+  aplaudir: 2000,
+  hombros: 1600,
+  taparse: 2400,
+  abrazo: 2200,
+  bailar: 3200,
+  senalar: 1800,
+};
+
+// Postura de la cabeza según la emoción
+export const POSTURES = {
+  neutral: { pan: 0, tilt: 0 },
+  feliz: { pan: 0, tilt: 8 },
+  triste: { pan: 0, tilt: -20 },
+  sorprendido: { pan: 0, tilt: 18 },
+  enojado: { pan: 0, tilt: -8 },
+  pensando: { pan: 22, tilt: 14 },
+  dormido: { pan: 0, tilt: -25 },
+  amor: { pan: -10, tilt: 6 },
+  curioso: { pan: 24, tilt: 10 },
+  escuchando: { pan: 12, tilt: 4 },
+  mareado: { pan: 0, tilt: 0 },
+  asustado: { pan: -15, tilt: -10 },
+  picaro: { pan: 12, tilt: -4 },
+  aburrido: { pan: 0, tilt: -12 },
+  riendo: { pan: 0, tilt: 15 },
+  llorando: { pan: 0, tilt: -18 },
+  confundido: { pan: 18, tilt: 6 },
+  emocionado: { pan: 0, tilt: 16 },
+  avergonzado: { pan: -20, tilt: -14 },
+  nervioso: { pan: -8, tilt: -4 },
+  muerto: { pan: 10, tilt: -25 },
+};
+
+const clamp = (v, m) => Math.max(-m, Math.min(m, v));
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/**
+ * Posición de la cabeza en el panel: postura según la emoción, gestos puntuales
+ * y, en neutral, miradas al azar ("vida propia"). glance() la hace mirar hacia un lado un rato.
+ */
+export function useHead({ emotion, idle, faceStyle }) {
+  const [gesture, setGesture] = useState(null);
+  const [glancePose, setGlancePose] = useState(null);
+  const timers = useRef({});
+
+  const later = (name, fn, ms) => {
+    clearTimeout(timers.current[name]);
+    timers.current[name] = setTimeout(fn, ms);
+  };
+
+  const playGesture = useCallback((g) => {
+    if (!GESTURE_MS[g]) return;
+    setGesture(null);
+    // un frame en null para que la animación arranque de nuevo si se repite el mismo gesto
+    requestAnimationFrame(() => setGesture(g));
+    later('gesture', () => setGesture(null), GESTURE_MS[g]);
+  }, []);
+
+  const glance = useCallback((pan, tilt = 0, ms = 2500) => {
+    setGlancePose({ pan: clamp(pan, PAN_MAX), tilt: clamp(tilt, TILT_MAX) });
+    later('glance', () => setGlancePose(null), ms);
+  }, []);
+
+  // Miradas al azar mientras está tranquilo. En terror: se queda quieto y gira de golpe hacia vos.
+  useEffect(() => {
+    if (!idle) return undefined;
+    let t;
+    const tick = () => {
+      if (faceStyle === 'terror' && Math.random() < 0.35) {
+        glance(rand(-60, 60), rand(-5, 5), 4000);
+      } else {
+        glance(rand(-35, 35), rand(-8, 12), rand(1500, 3000));
+      }
+      t = setTimeout(tick, rand(4000, 9000));
+    };
+    t = setTimeout(tick, rand(2500, 5000));
+    return () => clearTimeout(t);
+  }, [idle, faceStyle, glance]);
+
+  useEffect(() => () => Object.values(timers.current).forEach(clearTimeout), []);
+
+  const base = POSTURES[emotion] || POSTURES.neutral;
+  const pose = glancePose || base;
+  return { pose, gesture, playGesture, glance };
+}

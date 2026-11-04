@@ -12,6 +12,10 @@ export const GESTURE_LABELS = {
   mirarAbajo: 'Abajo',
   mirarIzquierda: 'Izquierda',
   mirarDerecha: 'Derecha',
+  mirarArribaIzq: 'Arriba izq.',
+  mirarArribaDer: 'Arriba der.',
+  mirarAbajoIzq: 'Abajo izq.',
+  mirarAbajoDer: 'Abajo der.',
   ladear: 'Curioso',  // no es un ladeo real (haría falta otro servo): gira un poco y mira para arriba
 };
 
@@ -35,6 +39,10 @@ export const GESTURE_MS = {
   mirarAbajo: 1600,
   mirarIzquierda: 1600,
   mirarDerecha: 1600,
+  mirarArribaIzq: 1600,
+  mirarArribaDer: 1600,
+  mirarAbajoIzq: 1600,
+  mirarAbajoDer: 1600,
   ladear: 1600,
   saludar: 2200,
   festejar: 2400,

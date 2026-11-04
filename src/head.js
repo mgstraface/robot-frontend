@@ -12,7 +12,7 @@ export const GESTURE_LABELS = {
   mirarAbajo: 'Abajo',
   mirarIzquierda: 'Izquierda',
   mirarDerecha: 'Derecha',
-  ladear: 'Ladear',
+  ladear: 'Curioso',  // no es un ladeo real (haría falta otro servo): gira un poco y mira para arriba
 };
 
 // Movimientos de brazos (servos de los hombros). Algunos también mueven la cabeza.

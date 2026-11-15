@@ -10,6 +10,7 @@ const SERVOS = [
 const TESTS = [
   { id: 'pantalla', label: 'Pantalla' },
   { id: 'audio', label: 'Audio' },
+  { id: 'micro', label: 'Micrófono' },
   { id: 'sensores', label: 'Sensores' },
   { id: 'servos', label: 'Servos (todos, despacio)' },
   { id: 'reiniciar', label: 'Reiniciar robot' },
@@ -43,6 +44,8 @@ export default function RobotPanel({ status, onError }) {
   const [ota, setOta] = useState(null);
   const [msg, setMsg] = useState('');
   const [girada, setGirada] = useState(false);
+  const [volumen, setVolumen] = useState(60);
+  const volTimer = useRef(null);
   const sendTimer = useRef(null);
 
   useEffect(() => {
@@ -52,6 +55,7 @@ export default function RobotPanel({ status, onError }) {
         setServos(s.servos);
         setSaved(s.servos);
         setGirada(Boolean(s.pantallaGirada));
+        if (Number.isFinite(s.volumen)) setVolumen(s.volumen);
         setAngle(s.servos?.pan?.centro ?? 90);
       })
       .catch(onError);
@@ -146,6 +150,8 @@ export default function RobotPanel({ status, onError }) {
           <dd>{Number.isFinite(d.status?.rssi) ? `${d.status.rssi} dBm` : '—'}</dd>
           <dt>Memoria libre</dt>
           <dd>{Number.isFinite(d.status?.heap) ? `${Math.round(d.status.heap / 1024)} KB` : '—'}</dd>
+          <dt>Táctil</dt>
+          <dd>{d.status?.tactil || '—'}</dd>
           <dt>Sensores</dt>
           <dd>{d.status?.sensores ? JSON.stringify(d.status.sensores) : '—'}</dd>
         </dl>
@@ -183,6 +189,23 @@ export default function RobotPanel({ status, onError }) {
           </button>
         ))}
       </div>
+
+      <label className="check">
+        Volumen del parlante: {volumen}%
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={volumen}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            setVolumen(v);
+            clearTimeout(volTimer.current);
+            volTimer.current = setTimeout(() => api.saveSettings({ volumen: v }).catch(onError), 400);
+          }}
+        />
+      </label>
 
       <label className="check">
         <input

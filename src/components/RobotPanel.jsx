@@ -11,6 +11,7 @@ const TESTS = [
   { id: 'pantalla', label: 'Pantalla' },
   { id: 'audio', label: 'Audio' },
   { id: 'micro', label: 'Micrófono' },
+  { id: 'eco', label: 'Eco local (3 s)' },
   { id: 'sensores', label: 'Sensores' },
   { id: 'servos', label: 'Servos (todos, despacio)' },
   { id: 'reiniciar', label: 'Reiniciar robot' },

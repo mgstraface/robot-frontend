@@ -1385,7 +1385,8 @@ label {
 .body-shell { fill: url(#body-shade); stroke: #6a6a72; stroke-width: 1.5; }
 .body-collar { fill: #54545b; stroke: #3b3b41; stroke-width: 1; }
 .body-mouth { fill: #3a3a40; }
-.body-bezel { fill: #33333a; stroke: #1b1b20; stroke-width: 1.5; }
+.body-bezel { fill: url(#body-shade); stroke: #6a6a72; stroke-width: 1.5; }
+.body-glass { fill: #1b1b20; }
 .body-arm-out { fill: none; stroke: #6a6a72; stroke-width: 10.5; stroke-linecap: round; stroke-linejoin: round; }
 .body-arm { fill: none; stroke: #b1b1b8; stroke-width: 7.5; stroke-linecap: round; stroke-linejoin: round; }
 .body-screen { fill: #0b0e12; }

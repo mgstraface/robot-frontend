@@ -4,16 +4,21 @@ import { useEffect, useId, useRef, useState } from 'react';
 // para dibujar las mismas expresiones en la pantalla del ESP32. La pantalla real es de 320×172 (apaisada):
 // el dibujo se hace en coordenadas 240×180 centradas, y la pantalla visible va de x=-40 a 280 y de y=4 a 176.
 
-const L = 78; // centro ojo izquierdo
-const R = 162; // centro ojo derecho
+const EK = 1.4; // ojos más grandes, para aprovechar la pantalla (igual que en el firmware)
+const L = 60; // centro ojo izquierdo (más separados)
+const R = 180; // centro ojo derecho
 const Y = 90; // altura de los ojos
 
 function Eye({ cx, w = 40, h = 56, dy = 0, dx = 0 }) {
-  return <rect x={cx - w / 2 + dx} y={Y - h / 2 + dy} width={w} height={h} rx={Math.min(18, w / 2)} className="eye" />;
+  w *= EK;
+  h *= EK;
+  dy *= EK;
+  dx *= EK;
+  return <rect x={cx - w / 2 + dx} y={Y - h / 2 + dy} width={w} height={h} rx={Math.min(18 * EK, w / 2)} className="eye" />;
 }
 
 function Heart({ cx }) {
-  const s = 1.15;
+  const s = 1.15 * EK;
   return (
     <path
       className="eye"
@@ -24,17 +29,19 @@ function Heart({ cx }) {
 }
 
 // Párpado: un polígono del color de la pantalla que tapa parte del ojo.
-function Lid({ cx, inner, outer, side }) {
+function Lid({ cx, inner: inner0, outer: outer0, side }) {
+  const inner = inner0 * EK;
+  const outer = outer0 * EK;
   // inner/outer: cuánto baja el párpado (px) del lado de la nariz y del lado de afuera
   // Ancho y hasta el borde de arriba de la pantalla, así tapa también el brillo del ojo (estilo terror)
-  const left = cx - 40;
-  const right = cx + 40;
-  const top = Y - 34;
+  const left = cx - 40 * EK;
+  const right = cx + 40 * EK;
+  const top = Y - 34 * EK;
   const [yl, yr] = side === 'L' ? [outer, inner] : [inner, outer];
   // la pendiente se extiende a los 80 px de ancho manteniendo la inclinación sobre el ojo
-  const slope = (yr - yl) / 52;
-  const yLeft = top + yl - slope * 14;
-  const yRight = top + yr + slope * 14;
+  const slope = (yr - yl) / (52 * EK);
+  const yLeft = top + yl - slope * 14 * EK;
+  const yRight = top + yr + slope * 14 * EK;
   return <polygon className="lid" points={`${left},0 ${right},0 ${right},${yRight} ${left},${yLeft}`} />;
 }
 
@@ -195,8 +202,8 @@ const FACES = {
   ),
   feliz: (style, talking) => (
     <g>
-      <path className="eye-line" d={`M ${L - 22} ${Y + 8} Q ${L} ${Y - 26} ${L + 22} ${Y + 8}`} />
-      <path className="eye-line" d={`M ${R - 22} ${Y + 8} Q ${R} ${Y - 26} ${R + 22} ${Y + 8}`} />
+      <path className="eye-line" d={`M ${L - 22 * EK} ${Y + 8 * EK} Q ${L} ${Y - 26 * EK} ${L + 22 * EK} ${Y + 8 * EK}`} />
+      <path className="eye-line" d={`M ${R - 22 * EK} ${Y + 8 * EK} Q ${R} ${Y - 26 * EK} ${R + 22 * EK} ${Y + 8 * EK}`} />
       <ellipse className="cheek" cx={L - 18} cy={Y + 30} rx="12" ry="6" />
       <ellipse className="cheek" cx={R + 18} cy={Y + 30} rx="12" ry="6" />
       <Mouth kind="sonrisa" talking={talking} />
@@ -227,10 +234,10 @@ const FACES = {
   sorprendido: (style, talking) => (
     <g>
       <g className="blink">
-        <circle className="eye" cx={L} cy={Y} r="28" />
-        <circle className="eye" cx={R} cy={Y} r="28" />
-        <circle className="pupil" cx={L} cy={Y} r="9" />
-        <circle className="pupil" cx={R} cy={Y} r="9" />
+        <circle className="eye" cx={L} cy={Y} r={28 * EK} />
+        <circle className="eye" cx={R} cy={Y} r={28 * EK} />
+        <circle className="pupil" cx={L} cy={Y} r={9 * EK} />
+        <circle className="pupil" cx={R} cy={Y} r={9 * EK} />
       </g>
       <Mouth kind="o" talking={talking} />
     </g>
@@ -250,8 +257,8 @@ const FACES = {
   ),
   dormido: () => (
     <g>
-      <path className="eye-line" d={`M ${L - 20} ${Y + 4} Q ${L} ${Y + 16} ${L + 20} ${Y + 4}`} />
-      <path className="eye-line" d={`M ${R - 20} ${Y + 4} Q ${R} ${Y + 16} ${R + 20} ${Y + 4}`} />
+      <path className="eye-line" d={`M ${L - 20 * EK} ${Y + 4 * EK} Q ${L} ${Y + 16 * EK} ${L + 20 * EK} ${Y + 4 * EK}`} />
+      <path className="eye-line" d={`M ${R - 20 * EK} ${Y + 4 * EK} Q ${R} ${Y + 16 * EK} ${R + 20 * EK} ${Y + 4 * EK}`} />
       <text className="zzz" x={R + 34} y={Y - 24}>z</text>
       <text className="zzz zzz-2" x={R + 46} y={Y - 42}>z</text>
     </g>
@@ -284,16 +291,16 @@ const FACES = {
   // ---- caras nuevas
   asustado: (style, talking) => (
     <g className="tremble">
-      <circle className="eye" cx={L} cy={Y - 4} r="26" />
-      <circle className="eye" cx={R} cy={Y - 4} r="26" />
-      <circle className="pupil" cx={L} cy={Y - 4} r="5" />
-      <circle className="pupil" cx={R} cy={Y - 4} r="5" />
+      <circle className="eye" cx={L} cy={Y - 4} r={26 * EK} />
+      <circle className="eye" cx={R} cy={Y - 4} r={26 * EK} />
+      <circle className="pupil" cx={L} cy={Y - 4 * EK} r={5 * EK} />
+      <circle className="pupil" cx={R} cy={Y - 4 * EK} r={5 * EK} />
       <Mouth kind="ondulada" talking={talking} />
     </g>
   ),
   picaro: (style, talking) => (
     <g>
-      <path className="eye-line" d={`M ${L - 20} ${Y + 2} Q ${L} ${Y - 12} ${L + 20} ${Y + 2}`} />
+      <path className="eye-line" d={`M ${L - 20 * EK} ${Y + 2 * EK} Q ${L} ${Y - 12 * EK} ${L + 20 * EK} ${Y + 2 * EK}`} />
       <g className="blink">
         <Eye cx={R} />
       </g>
@@ -310,15 +317,15 @@ const FACES = {
   ),
   riendo: (style, talking) => (
     <g className="bounce">
-      <path className="eye-line" d={`M ${L - 18} ${Y - 12} L ${L + 10} ${Y} L ${L - 18} ${Y + 12}`} />
-      <path className="eye-line" d={`M ${R + 18} ${Y - 12} L ${R - 10} ${Y} L ${R + 18} ${Y + 12}`} />
+      <path className="eye-line" d={`M ${L - 18 * EK} ${Y - 12 * EK} L ${L + 10 * EK} ${Y} L ${L - 18 * EK} ${Y + 12 * EK}`} />
+      <path className="eye-line" d={`M ${R + 18 * EK} ${Y - 12 * EK} L ${R - 10 * EK} ${Y} L ${R + 18 * EK} ${Y + 12 * EK}`} />
       <Mouth kind="carcajada" talking={talking} />
     </g>
   ),
   llorando: (style, talking) => (
     <g>
-      <path className="eye-line" d={`M ${L - 20} ${Y} Q ${L} ${Y - 14} ${L + 20} ${Y}`} />
-      <path className="eye-line" d={`M ${R - 20} ${Y} Q ${R} ${Y - 14} ${R + 20} ${Y}`} />
+      <path className="eye-line" d={`M ${L - 20 * EK} ${Y} Q ${L} ${Y - 14 * EK} ${L + 20 * EK} ${Y}`} />
+      <path className="eye-line" d={`M ${R - 20 * EK} ${Y} Q ${R} ${Y - 14 * EK} ${R + 20 * EK} ${Y}`} />
       <path className="tear-stream" d={`M ${L - 6} ${Y + 6} q -4 30 2 70`} />
       <path className="tear-stream tear-2" d={`M ${R + 6} ${Y + 6} q 4 30 -2 70`} />
       <Mouth kind="ondulada" talking={talking} />
@@ -330,7 +337,7 @@ const FACES = {
         <Eye cx={L} w={30} h={30} dy={6} />
         <Eye cx={R} w={42} h={58} dy={-4} />
       </g>
-      <path className="eye-line thin-line" d={`M ${R - 18} ${Y - 46} L ${R + 20} ${Y - 38}`} />
+      <path className="eye-line thin-line" d={`M ${R - 18 * EK} ${Y - 46 * EK} L ${R + 20 * EK} ${Y - 38 * EK}`} />
       <text className="qmark" x={R + 46} y={Y - 26}>?</text>
       <Mouth kind="ondulada" talking={talking} />
     </g>
@@ -367,8 +374,8 @@ const FACES = {
   ),
   muerto: (style, talking) => (
     <g>
-      <path className="eye-line" d={`M ${L - 16} ${Y - 16} L ${L + 16} ${Y + 16} M ${L + 16} ${Y - 16} L ${L - 16} ${Y + 16}`} />
-      <path className="eye-line" d={`M ${R - 16} ${Y - 16} L ${R + 16} ${Y + 16} M ${R + 16} ${Y - 16} L ${R - 16} ${Y + 16}`} />
+      <path className="eye-line" d={`M ${L - 16 * EK} ${Y - 16 * EK} L ${L + 16 * EK} ${Y + 16 * EK} M ${L + 16 * EK} ${Y - 16 * EK} L ${L - 16 * EK} ${Y + 16 * EK}`} />
+      <path className="eye-line" d={`M ${R - 16 * EK} ${Y - 16 * EK} L ${R + 16 * EK} ${Y + 16 * EK} M ${R + 16 * EK} ${Y - 16 * EK} L ${R - 16 * EK} ${Y + 16 * EK}`} />
       {talking ? <Mouth talking /> : <path className="tongue" d="M128 140 L142 140 L142 154 Q135 164 128 154 Z" />}
       {!talking && <path className="mouth-line" d="M104 142 L146 140" />}
     </g>
@@ -456,8 +463,8 @@ export const IDLE_ACTIONS = {
     render: () => (
       <g className="sneeze">
         <g className="sneeze-squint">
-          <path className="eye-line" d={`M${L - 18} ${Y - 6} L${L + 6} ${Y} L${L - 18} ${Y + 6}`} />
-          <path className="eye-line" d={`M${R + 18} ${Y - 6} L${R - 6} ${Y} L${R + 18} ${Y + 6}`} />
+          <path className="eye-line" d={`M${L - 18 * EK} ${Y - 6 * EK} L${L + 6 * EK} ${Y} L${L - 18 * EK} ${Y + 6 * EK}`} />
+          <path className="eye-line" d={`M${R + 18 * EK} ${Y - 6 * EK} L${R - 6 * EK} ${Y} L${R + 18 * EK} ${Y + 6 * EK}`} />
         </g>
         <text className="sneeze-text" x="120" y="150" textAnchor="middle">
           ¡achís!
@@ -520,7 +527,7 @@ export const IDLE_ACTIONS = {
     modes: ['tierno'],
     render: () => (
       <g>
-        <path className="eye-line" d={`M ${L - 20} ${Y + 6} Q ${L} ${Y - 20} ${L + 20} ${Y + 6}`} />
+        <path className="eye-line" d={`M ${L - 20 * EK} ${Y + 6 * EK} Q ${L} ${Y - 20 * EK} ${L + 20 * EK} ${Y + 6 * EK}`} />
         <g className="blink">
           <Eye cx={R} w={36} h={48} />
         </g>
@@ -639,8 +646,8 @@ export const IDLE_ACTIONS = {
           ))}
         </g>
         <g className="bounce">
-          <path className="eye-line" d={`M ${L - 18} ${Y - 30} L ${L + 10} ${Y - 18} L ${L - 18} ${Y - 6}`} />
-          <path className="eye-line" d={`M ${R + 18} ${Y - 30} L ${R - 10} ${Y - 18} L ${R + 18} ${Y - 6}`} />
+          <path className="eye-line" d={`M ${L - 18 * EK} ${Y - 30 * EK} L ${L + 10 * EK} ${Y - 18 * EK} L ${L - 18 * EK} ${Y - 6 * EK}`} />
+          <path className="eye-line" d={`M ${R + 18 * EK} ${Y - 30 * EK} L ${R - 10 * EK} ${Y - 18 * EK} L ${R + 18 * EK} ${Y - 6 * EK}`} />
           <text className="gol-text" x="120" y="150" textAnchor="middle">GOOOL</text>
         </g>
       </g>

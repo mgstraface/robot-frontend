@@ -48,15 +48,17 @@ export default function Body({ pose, gesture, emotion, eyeColor, onZone }) {
       <rect x="62" y="59" width="16" height="12" rx="3" className="body-collar" />
       {/* cabeza: giro (pan) y cabeceo (tilt) */}
       <g className="body-head" style={{ '--pan': `${(pose?.pan || 0) * 0.25}px`, '--tilt': `${-(pose?.tilt || 0)}deg` }}>
-        <rect x="41" y="23" width="58" height="37" rx="9" className="body-bezel" />
-        <rect x="46" y="28" width="48" height="27" rx="5" className="body-screen" />
-        <rect x="56" y="35" width="8" height="12" rx="4" className="body-eye" />
-        <rect x="76" y="35" width="8" height="12" rx="4" className="body-eye" />
+        {/* cabeza: carcasa clara (como la impresa) con la pantalla adentro */}
+        <rect x="36" y="16" width="68" height="46" rx="13" className="body-bezel" />
+        <rect x="44" y="23" width="52" height="32" rx="7" className="body-glass" />
+        <rect x="46" y="25" width="48" height="28" rx="5" className="body-screen" />
+        <rect x="52" y="31" width="12" height="17" rx="5" className="body-eye" />
+        <rect x="76" y="31" width="12" height="17" rx="5" className="body-eye" />
       </g>
       {/* zonas táctiles (los mismos sensores que el robot): cabeza y panza */}
       {onZone && (
         <>
-          <ellipse cx="70" cy="41" rx="31" ry="21" className="body-zone" onClick={() => onZone('cabeza')}>
+          <ellipse cx="70" cy="39" rx="34" ry="23" className="body-zone" onClick={() => onZone('cabeza')}>
             <title>Sensor de la cabeza</title>
           </ellipse>
           <ellipse cx="70" cy="122" rx="26" ry="30" className="body-zone" onClick={() => onZone('panza')}>

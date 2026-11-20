@@ -21,6 +21,8 @@ export default function ChatPanel({ onEmotion, onGesture, robotId, serverVoice, 
   const [pcVoice, setPcVoice] = useState(loadVoicePref);
   const [listening, setListening] = useState(false);
   const listenRef = useRef(null);
+  const [rec, setRec] = useState(null); // 'grabando' | 'enviando' | null
+  const recRef = useRef(null);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -106,6 +108,40 @@ export default function ChatPanel({ onEmotion, onGesture, robotId, serverVoice, 
     }
   }
 
+  // Hablarle al ROBOT con el micrófono del celu/PC: lo transcribe el servidor y contesta el robot por su parlante
+  async function toggleRobotMic() {
+    if (rec === 'grabando') {
+      recRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      const mr = new MediaRecorder(stream);
+      const chunks = [];
+      mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        recRef.current = null;
+        setRec('enviando');
+        try {
+          const r = await api.hablar(new Blob(chunks, { type: mr.mimeType || 'audio/webm' }));
+          setMessages((m) => [...m, { role: 'user', text: r.text ? `🎙 ${r.text}` : '🎙 (no se entendió nada)' }]);
+        } catch (err) {
+          onError(err);
+        } finally {
+          setRec(null);
+        }
+      };
+      recRef.current = mr;
+      mr.start();
+      setRec('grabando');
+      setTimeout(() => mr.state === 'recording' && mr.stop(), 15000);
+    } catch (err) {
+      setRec(null);
+      onError(err);
+    }
+  }
+
   return (
     <section className="card chat">
       <header className="card-head">
@@ -158,6 +194,18 @@ export default function ChatPanel({ onEmotion, onGesture, robotId, serverVoice, 
               <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
               <path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
             </svg>
+          </button>
+        )}
+        {robotId && typeof MediaRecorder !== 'undefined' && (
+          <button
+            type="button"
+            className={`mic ${rec === 'grabando' ? 'on' : ''}`}
+            onClick={toggleRobotMic}
+            disabled={sending || rec === 'enviando'}
+            title="Hablarle al robot (lo escucha el servidor y contesta por su parlante)"
+            aria-label="Hablarle al robot"
+          >
+            {rec === 'grabando' ? '■' : rec === 'enviando' ? '…' : '🤖🎙'}
           </button>
         )}
         <input

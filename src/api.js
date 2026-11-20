@@ -35,7 +35,22 @@ async function request(path, { method = 'GET', body, token = getToken() } = {}) 
   return data;
 }
 
+// Audio grabado en el celu/PC → el robot lo escucha (Whisper del servidor) y contesta
+async function hablar(blob) {
+  const token = getToken();
+  const res = await fetch(`${BASE}/api/robot/hablar`, {
+    method: 'POST',
+    headers: { 'Content-Type': blob.type || 'audio/webm', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: blob,
+  });
+  if (res.status === 401) throw new UnauthorizedError('Token inválido');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  return data;
+}
+
 export const api = {
+  hablar,
   config: (token) => request('/config', { token }),
   getPersonality: () => request('/personality'),
   savePersonality: (data) => request('/personality', { method: 'PUT', body: data }),
